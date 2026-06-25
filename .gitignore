@@ -1,34 +1,39 @@
-# Dependency directories
+# Monorepo root .gitignore
+
+# Dependencies
 node_modules/
+**/node_modules/
 
-# Production build outputs
+# Production builds
+**/dist/
+**/dist-ssr/
 dist/
-dist-ssr/
 
-# Environment variables
+# Local configuration & environments
 .env
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
-.env.local.local
+**/ .env
+**/.env
+**/.env.*
 
 # Logs
 logs/
+**/logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
 
 # System files
 .DS_Store
 Thumbs.db
+**/.DS_Store
 
-# Editor/IDE files
+# Editor/IDE configurations
 .vscode/
-!.vscode/extensions.json
 .idea/
 *.suo
 *.ntvs*
