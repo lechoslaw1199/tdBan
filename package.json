@@ -1,0 +1,14 @@
+{
+  "name": "nation-banss-auth",
+  "version": "1.0.0",
+  "description": "Full authentication UI with React, Vite, Tailwind CSS and Express.js backend",
+  "scripts": {
+    "install:all": "npm install && npm install --prefix client && npm install --prefix server",
+    "server": "npm --prefix server run dev",
+    "client": "npm --prefix client run dev",
+    "dev": "concurrently \"npm run server\" \"npm run client\""
+  },
+  "dependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
