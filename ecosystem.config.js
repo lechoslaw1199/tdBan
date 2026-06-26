@@ -1,7 +1,7 @@
 module.exports = {
   apps: [
     {
-      name: 'tdban-server',
+      name: 'tdban-backend',
       script: './server/index.js',
       cwd: '/var/www/tdBan',
       instances: 1,
