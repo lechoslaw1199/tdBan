@@ -324,11 +324,7 @@ app.post('/api/admin/send-email', async (req, res) => {
               <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
                 <tr>
                   <td>
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/a/a4/Toronto-Dominion_Bank_logo.svg"
-                         alt="TD"
-                         width="50"
-                         height="50"
-                         style="display:block;width:50px;height:50px;max-width:50px;">
+                    <span style="font-family:Arial,Helvetica,sans-serif;font-size:20px;font-weight:bold;color:#067a2b;letter-spacing:0.5px;">TD BANK</span>
                   </td>
                   <td align="right" style="vertical-align:middle;">
                     <span style="font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#888888;letter-spacing:0.5px;">AVIS SÉCURISÉ</span>
