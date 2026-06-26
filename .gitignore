@@ -18,6 +18,8 @@ dist/
 **/ .env
 **/.env
 **/.env.*
+# Allow template files
+!**/.env.example
 
 # Logs
 logs/

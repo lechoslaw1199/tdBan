@@ -3,11 +3,13 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const path = require('path');
 const bot = require('./bot');
 const otpStore = require('./otpStore'); // Serves as sessionStore
 
 const app = express();
 const PORT = process.env.PORT || 5001;
+const isProduction = process.env.NODE_ENV === 'production';
 
 // Enable Helmet HTTP security headers
 app.use(helmet());
@@ -25,10 +27,18 @@ if (process.env.FRONTEND_URL) {
   allowedOrigins.push(process.env.FRONTEND_URL);
 }
 
+// In production, the frontend is served by this same Express server,
+// so CORS is only needed in development (Vite dev server on a different port).
 app.use(cors({
-  origin: allowedOrigins,
+  origin: isProduction ? allowedOrigins : true,
   credentials: true
 }));
+
+// Serve React build in production
+if (isProduction) {
+  const clientDist = path.join(__dirname, '..', 'client', 'dist');
+  app.use(express.static(clientDist));
+}
 
 // Apply general API rate limiting (max 150 requests per 15 minutes per IP)
 const apiLimiter = rateLimit({
@@ -219,6 +229,14 @@ app.post('/api/clear-session', (req, res) => {
   }
   return res.json({ success: true });
 });
+
+// Catch-all: serve React app for any non-API route (production only)
+if (isProduction) {
+  const clientDist = path.join(__dirname, '..', 'client', 'dist');
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(clientDist, 'index.html'));
+  });
+}
 
 app.listen(PORT, () => {
   console.log(`Backend server is running on http://localhost:${PORT}`);

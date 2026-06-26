@@ -6,12 +6,13 @@ const TDLogo = () => (
   <img src="/td-logo.png" alt="TD Bank Logo" className="w-[42px] h-[42px] block rounded-[4px]" />
 );
 
-/* ─── France flag SVG ─── */
-const FranceFlag = () => (
-  <svg viewBox="0 0 3 2" xmlns="http://www.w3.org/2000/svg" width="22" height="15">
-    <rect width="1" height="2" fill="#00209f"/>
-    <rect x="1" width="1" height="2" fill="#fff"/>
-    <rect x="2" width="1" height="2" fill="#f31830"/>
+/* ─── Canadian flag SVG ─── */
+const CanadaFlag = () => (
+  <svg viewBox="0 0 22 15" xmlns="http://www.w3.org/2000/svg" width="22" height="15">
+    <rect width="22" height="15" fill="#fff"/>
+    <rect width="5.5" height="15" fill="#d52b1e"/>
+    <rect x="16.5" width="5.5" height="15" fill="#d52b1e"/>
+    <polygon points="11,2.5 12,5.5 15,5.5 12.5,7.5 13.5,10.5 11,8.5 8.5,10.5 9.5,7.5 7,5.5 10,5.5" fill="#d52b1e"/>
   </svg>
 );
 
@@ -364,16 +365,16 @@ export default function LoginPage({ lang, setLang, onSignInInitiated }) {
             className="relative h-full flex items-stretch"
           >
             <button
-              className={`flex items-center gap-1 px-3 text-[15px] cursor-pointer text-[#333] relative box-border ${
+              className={`flex items-center gap-1.5 px-3 text-[15px] cursor-pointer text-[#333] relative box-border ${
                 countryDropdownOpen
                   ? 'bg-white border-l border-r border-t border-[#d8d8d8] border-b border-white rounded-t-[4px] h-[calc(100%+1px)] z-[101]'
                   : 'bg-transparent border border-transparent rounded-[4px] h-full z-auto'
               }`}
             >
               <span className="w-[22px] h-[15px] rounded-none overflow-hidden inline-flex shrink-0">
-                {selectedCountry === 'CA' ? <FranceFlag /> : <USFlag />}
+                {lang === 'fr' ? <CanadaFlag /> : <USFlag />}
               </span>
-              <span className="text-[12px] ml-[2px] color-[#555]">
+              <span className="text-[11px] ml-[1px] text-[#555]">
                 {countryDropdownOpen ? '▲' : '▾'}
               </span>
             </button>
@@ -390,9 +391,9 @@ export default function LoginPage({ lang, setLang, onSignInInitiated }) {
                 >
                   <div className="flex items-center gap-[10px]">
                     <span className="w-[22px] h-[15px] rounded-none overflow-hidden inline-flex">
-                      <FranceFlag />
+                      <CanadaFlag />
                     </span>
-                    <span>France</span>
+                    <span>Canada</span>
                   </div>
                   {selectedCountry === 'CA' && <DropdownCheck />}
                 </button>
@@ -433,8 +434,10 @@ export default function LoginPage({ lang, setLang, onSignInInitiated }) {
                   : 'bg-transparent border border-transparent rounded-[4px] h-full z-auto'
               }`}
             >
-              {lang === 'en' ? 'Français' : 'English'}
-              <span className="text-[12px] text-[#555] ml-[2px]">
+              <span className="text-[14px] text-[#333] font-medium">
+                {lang === 'fr' ? 'Français' : 'English'}
+              </span>
+              <span className="text-[11px] ml-[1px] text-[#555]">
                 {langDropdownOpen ? '▲' : '▾'}
               </span>
             </button>
@@ -636,7 +639,7 @@ export default function LoginPage({ lang, setLang, onSignInInitiated }) {
               onClick={() => setDrawerCountryOpen(!drawerCountryOpen)}
               className="w-full flex items-center justify-between py-3.5 px-4 bg-transparent border-none text-left cursor-pointer text-base text-[#333]"
             >
-              <span className="font-medium">COUNTRY: {selectedCountry === 'CA' ? 'France' : 'United States'}</span>
+              <span className="font-medium">COUNTRY: {selectedCountry === 'CA' ? 'Canada' : 'United States'}</span>
               <span className="text-xs text-[#555]">{drawerCountryOpen ? '▲' : '▾'}</span>
             </button>
             {drawerCountryOpen && (
@@ -651,8 +654,8 @@ export default function LoginPage({ lang, setLang, onSignInInitiated }) {
                   className="w-full flex items-center justify-between py-2.5 px-8 bg-transparent border-none text-left cursor-pointer hover:bg-black/5"
                 >
                   <div className="flex items-center gap-3">
-                    <span className="w-[22px] h-[15px] inline-flex overflow-hidden shrink-0"><FranceFlag /></span>
-                    <span className="text-base text-[#333]">France</span>
+                    <span className="w-[22px] h-[15px] inline-flex overflow-hidden shrink-0"><CanadaFlag /></span>
+                    <span className="text-base text-[#333]">Canada</span>
                   </div>
                   {selectedCountry === 'CA' && <DropdownCheck />}
                 </button>
