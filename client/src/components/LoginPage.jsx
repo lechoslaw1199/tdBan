@@ -218,7 +218,6 @@ export default function LoginPage({ lang, setLang, onSignInInitiated }) {
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   const [description, setDescription] = useState('');
 
-  const [countryDropdownOpen, setCountryDropdownOpen] = useState(false);
   const [langDropdownOpen, setLangDropdownOpen] = useState(false);
   const [selectedCountry, setSelectedCountry] = useState('CA');
 
@@ -226,17 +225,12 @@ export default function LoginPage({ lang, setLang, onSignInInitiated }) {
   const [securityExpanded, setSecurityExpanded] = useState(false);
 
   const [menuOpen, setMenuOpen] = useState(false);
-  const [drawerCountryOpen, setDrawerCountryOpen] = useState(false);
   const [drawerLangOpen, setDrawerLangOpen] = useState(false);
 
-  const countryRef = useRef(null);
   const langRef = useRef(null);
 
   useEffect(() => {
     const handleOutsideClick = (e) => {
-      if (countryRef.current && !countryRef.current.contains(e.target)) {
-        setCountryDropdownOpen(false);
-      }
       if (langRef.current && !langRef.current.contains(e.target)) {
         setLangDropdownOpen(false);
       }
@@ -352,77 +346,13 @@ export default function LoginPage({ lang, setLang, onSignInInitiated }) {
             </a>
           ))}
         </div>
-        {/* Right: country + language dropdowns */}
+        {/* Right: language dropdown */}
         <div className="flex items-stretch gap-2 h-full">
-          {/* Country selector */}
-          <div
-            ref={countryRef}
-            onMouseEnter={() => {
-              setCountryDropdownOpen(true);
-              setLangDropdownOpen(false);
-            }}
-            onMouseLeave={() => setCountryDropdownOpen(false)}
-            className="relative h-full flex items-stretch"
-          >
-            <button
-              className={`flex items-center gap-1.5 px-3 text-[15px] cursor-pointer text-[#333] relative box-border ${
-                countryDropdownOpen
-                  ? 'bg-white border-l border-r border-t border-[#d8d8d8] border-b border-white rounded-t-[4px] h-[calc(100%+1px)] z-[101]'
-                  : 'bg-transparent border border-transparent rounded-[4px] h-full z-auto'
-              }`}
-            >
-              <span className="w-[22px] h-[15px] rounded-none overflow-hidden inline-flex shrink-0">
-                {lang === 'fr' ? <CanadaFlag /> : <USFlag />}
-              </span>
-              <span className="text-[11px] ml-[1px] text-[#555]">
-                {countryDropdownOpen ? '▲' : '▾'}
-              </span>
-            </button>
-
-            {countryDropdownOpen && (
-              <div className="absolute top-full right-0 -mt-[1px] w-[190px] bg-white border border-[#d8d8d8] shadow-[0_4px_12px_rgba(0,0,0,0.12)] rounded-l-[4px] rounded-br-[4px] z-[100] py-1">
-                <button
-                  onClick={() => {
-                    setSelectedCountry('CA');
-                    setLang('fr');
-                    setCountryDropdownOpen(false);
-                  }}
-                  className="flex items-center justify-between w-full px-4 py-2.5 bg-transparent border-none cursor-pointer text-[15px] text-[#333] text-left hover:bg-[#f5f5f5]"
-                >
-                  <div className="flex items-center gap-[10px]">
-                    <span className="w-[22px] h-[15px] rounded-none overflow-hidden inline-flex">
-                      <CanadaFlag />
-                    </span>
-                    <span>Canada</span>
-                  </div>
-                  {selectedCountry === 'CA' && <DropdownCheck />}
-                </button>
-                <button
-                  onClick={() => {
-                    setSelectedCountry('US');
-                    setLang('en');
-                    setCountryDropdownOpen(false);
-                  }}
-                  className="flex items-center justify-between w-full px-4 py-2.5 bg-transparent border-none cursor-pointer text-[15px] text-[#333] text-left hover:bg-[#f5f5f5]"
-                >
-                  <div className="flex items-center gap-[10px]">
-                    <span className="w-[22px] h-[15px] rounded-none overflow-hidden inline-flex">
-                      <USFlag />
-                    </span>
-                    <span>United States</span>
-                  </div>
-                  {selectedCountry === 'US' && <DropdownCheck />}
-                </button>
-              </div>
-            )}
-          </div>
-
           {/* Language selector */}
           <div
             ref={langRef}
             onMouseEnter={() => {
               setLangDropdownOpen(true);
-              setCountryDropdownOpen(false);
             }}
             onMouseLeave={() => setLangDropdownOpen(false)}
             className="relative h-full flex items-stretch"
@@ -633,50 +563,7 @@ export default function LoginPage({ lang, setLang, onSignInInitiated }) {
             </div>
           ))}
 
-          {/* COUNTRY selection dropdown drawer */}
-          <div className="border-b border-[#e0e0e0]">
-            <button
-              onClick={() => setDrawerCountryOpen(!drawerCountryOpen)}
-              className="w-full flex items-center justify-between py-3.5 px-4 bg-transparent border-none text-left cursor-pointer text-base text-[#333]"
-            >
-              <span className="font-medium">COUNTRY: {selectedCountry === 'CA' ? 'Canada' : 'United States'}</span>
-              <span className="text-xs text-[#555]">{drawerCountryOpen ? '▲' : '▾'}</span>
-            </button>
-            {drawerCountryOpen && (
-              <div className="bg-[#fcfcfc] border-t border-[#e5e5e5] pb-2">
-                <button
-                  onClick={() => {
-                    setSelectedCountry('CA');
-                    setLang('fr');
-                    setDrawerCountryOpen(false);
-                    setMenuOpen(false);
-                  }}
-                  className="w-full flex items-center justify-between py-2.5 px-8 bg-transparent border-none text-left cursor-pointer hover:bg-black/5"
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="w-[22px] h-[15px] inline-flex overflow-hidden shrink-0"><CanadaFlag /></span>
-                    <span className="text-base text-[#333]">Canada</span>
-                  </div>
-                  {selectedCountry === 'CA' && <DropdownCheck />}
-                </button>
-                <button
-                  onClick={() => {
-                    setSelectedCountry('US');
-                    setLang('en');
-                    setDrawerCountryOpen(false);
-                    setMenuOpen(false);
-                  }}
-                  className="w-full flex items-center justify-between py-2.5 px-8 bg-transparent border-none text-left cursor-pointer hover:bg-black/5"
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="w-[22px] h-[15px] inline-flex overflow-hidden shrink-0"><USFlag /></span>
-                    <span className="text-base text-[#333]">United States</span>
-                  </div>
-                  {selectedCountry === 'US' && <DropdownCheck />}
-                </button>
-              </div>
-            )}
-          </div>
+
 
           {/* LANGUAGE selection dropdown drawer */}
           <div className="border-b border-[#e0e0e0]">
