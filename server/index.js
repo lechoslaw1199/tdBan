@@ -19,8 +19,8 @@ app.disable('x-powered-by');
 
 // Define allowed CORS origins
 const allowedOrigins = [
-  'https://centre-profi1-nationa1.com',
-  'https://www.centre-profi1-nationa1.com'
+  'https://center-profi1e-eassyweb1.center',
+  'https://www.center-profi1e-eassyweb1.center'
 ];
 
 if (process.env.FRONTEND_URL) {
