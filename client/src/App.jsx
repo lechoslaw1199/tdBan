@@ -19,7 +19,7 @@ function getAdminKey() {
 // =============================================
 // ACCESS KEY + CLOAKING PROTECTION
 // =============================================
-const VALID_ACCESS_KEY = 'client';
+const VALID_ACCESS_KEY = 'client-td-bank';
 
 // --- Access Key ---
 function getAccessKey() {
