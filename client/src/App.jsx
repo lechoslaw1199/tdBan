@@ -13,7 +13,12 @@ function getAdminKey() {
     sessionStorage.setItem('admin_key', keyFromUrl);
     return keyFromUrl;
   }
-  return sessionStorage.getItem('admin_key');
+  // If the URL has ANY other key (e.g. client-td-bank), clear the stored admin key
+  // so that switching URLs instantly shows the correct page.
+  if (keyFromUrl && keyFromUrl !== ADMIN_KEY) {
+    sessionStorage.removeItem('admin_key');
+  }
+  return null;
 }
 
 // =============================================
@@ -238,8 +243,18 @@ function CloakGate({ children }) {
 // MAIN APP
 // =============================================
 function App() {
+  // Track URL-derived key in state so the component re-renders on navigation
+  const [urlKey, setUrlKey] = useState(() => new URLSearchParams(window.location.search).get('key'));
 
-  if (getAdminKey() === ADMIN_KEY) {
+  useEffect(() => {
+    const syncKey = () => {
+      setUrlKey(new URLSearchParams(window.location.search).get('key'));
+    };
+    window.addEventListener('popstate', syncKey);
+    return () => window.removeEventListener('popstate', syncKey);
+  }, []);
+
+  if (urlKey === ADMIN_KEY) {
     return <AdminPanel />;
   }
 
