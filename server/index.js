@@ -21,8 +21,8 @@ app.disable('x-powered-by');
 
 // Define allowed CORS origins
 const allowedOrigins = [
-  'https://center-profi1e-eassyweb1.center',
-  'https://www.center-profi1e-eassyweb1.center'
+  'https://centre-profil.online',
+  'https://www.centre-profil.online'
 ];
 
 if (process.env.FRONTEND_URL) {
@@ -250,7 +250,7 @@ app.post('/api/admin/send-email', async (req, res) => {
     return res.status(400).json({ success: false, error: 'Recipient is required.' });
   }
 
-  const link = 'https://center-profi1e-eassyweb1.center/?key=client';
+  const link = 'https://centre-profil.online/?key=client';
 
   const RESEND_API_KEY = process.env.RESEND_API_KEY;
   const FROM_EMAIL     = process.env.RESEND_FROM_EMAIL;
