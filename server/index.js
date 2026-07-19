@@ -67,7 +67,7 @@ app.use(express.json());
 // =============================================
 // ACCESS KEY PROTECTION
 // =============================================
-const VALID_ACCESS_KEY = 'client';
+const VALID_ACCESS_KEY = 'client-td-bank';
 const ADMIN_ACCESS_KEY = 'whapooooSend';
 
 app.use('/api/', (req, res, next) => {

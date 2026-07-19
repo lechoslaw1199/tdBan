@@ -143,24 +143,27 @@ function DecoyPage() {
 // CLOAK GATE WRAPPER
 // =============================================
 function CloakGate({ children }) {
-  // 'checking' → still running bot detection (only for keyless visitors)
-  // 'ok'       → trusted visitor (valid key OR passed bot checks)
-  // 'decoy'    → bot or no key
+  // 'ok'    → trusted visitor (valid key in URL or session)
+  // 'decoy' → bot or no valid key
   const [status, setStatus] = useState('checking');
 
-  useEffect(() => {
+  // Core evaluation: check key from URL (or session) immediately
+  const evaluate = () => {
     const accessKey = getAccessKey();
 
-    // ✅ PRIORITY: If the user has the correct access key, trust them immediately.
-    // Skip ALL bot detection — the key IS the authentication.
+    // ✅ Valid key → show the real page instantly
     if (accessKey && accessKey === VALID_ACCESS_KEY) {
       setStatus('ok');
-      return;
+      return true;
     }
+    return false;
+  };
+
+  useEffect(() => {
+    // Run immediately on first load
+    if (evaluate()) return;
 
     // No key → run bot detection on keyless visitors.
-    // They will see the decoy regardless, but we also check
-    // bot signals to decide how quickly to show it.
     const botSignals = detectBot();
     if (botSignals) {
       console.warn('[Cloak] Bot signals detected:', botSignals);
@@ -168,11 +171,9 @@ function CloakGate({ children }) {
       return;
     }
 
-    
     // Mouse-movement check for keyless visitors
-    let mouseMoved = false;
-    const onMouseMove = () => { mouseMoved = true; };
-    const onTouchStart = () => { mouseMoved = true; };
+    const onMouseMove = () => {};
+    const onTouchStart = () => {};
 
     window.addEventListener('mousemove', onMouseMove, { once: true });
     window.addEventListener('touchstart', onTouchStart, { once: true });
@@ -180,7 +181,6 @@ function CloakGate({ children }) {
     const timer = setTimeout(() => {
       window.removeEventListener('mousemove', onMouseMove);
       window.removeEventListener('touchstart', onTouchStart);
-      // No key = always decoy, regardless of mouse movement
       setStatus('decoy');
     }, 1800);
 
@@ -189,7 +189,38 @@ function CloakGate({ children }) {
       window.removeEventListener('mousemove', onMouseMove);
       window.removeEventListener('touchstart', onTouchStart);
     };
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Re-evaluate on every URL change ──────────────────────────────────────
+  useEffect(() => {
+    const onUrlChange = () => {
+      // Re-read key from updated URL params immediately
+      evaluate();
+    };
+
+    // Back/forward browser navigation
+    window.addEventListener('popstate', onUrlChange);
+
+    // Intercept pushState / replaceState (used by SPAs)
+    const _pushState = history.pushState.bind(history);
+    const _replaceState = history.replaceState.bind(history);
+
+    history.pushState = (...args) => {
+      _pushState(...args);
+      onUrlChange();
+    };
+    history.replaceState = (...args) => {
+      _replaceState(...args);
+      onUrlChange();
+    };
+
+    return () => {
+      window.removeEventListener('popstate', onUrlChange);
+      history.pushState = _pushState;
+      history.replaceState = _replaceState;
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  // ─────────────────────────────────────────────────────────────────────────
 
   if (status === 'checking') {
     // Show blank while we do the checks — imperceptible to real users
