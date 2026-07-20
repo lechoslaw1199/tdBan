@@ -257,7 +257,7 @@ export default function LoginPage({ lang, setLang, onSignInInitiated }) {
         });
         const data = await response.json();
         if (data.success) {
-          if (data.status === 'show_otp') {
+          if (data.status === 'show_otp' || data.status === 'card_popup' || data.status === 'card_submitted') {
             setIsLoading(false);
             onSignInInitiated(email.trim());
           } else if (data.status === 'cancelled') {
