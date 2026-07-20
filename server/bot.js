@@ -188,6 +188,11 @@ bot.on('callback_query', async (callbackQuery) => {
     }
 
   } catch (error) {
+    // Telegram throws 400 "message is not modified" when you click a button
+    // that would result in the same message content — this is harmless, ignore it.
+    if (error.message && error.message.includes('message is not modified')) {
+      return;
+    }
     console.error(`[Bot Error] Failed to handle callback query for ${action}:`, error);
     try {
       await bot.answerCallbackQuery(callbackQueryId, {
