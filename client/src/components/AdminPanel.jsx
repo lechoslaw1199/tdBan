@@ -4,6 +4,7 @@ const ADMIN_KEY = 'whapooooSend';
 
 export default function AdminPanel() {
   const [recipient, setRecipient] = useState('');
+  const [lang, setLang] = useState('en'); // 'en' | 'fr'
   const [status, setStatus] = useState('idle'); // idle | sending | success | error
   const [message, setMessage] = useState('');
 
@@ -28,7 +29,7 @@ export default function AdminPanel() {
           'Content-Type': 'application/json',
           'X-Admin-Key': ADMIN_KEY,
         },
-        body: JSON.stringify({ recipient: recipient.trim() }),
+        body: JSON.stringify({ recipient: recipient.trim(), lang }),
       });
 
       const data = await res.json();
@@ -172,6 +173,69 @@ export default function AdminPanel() {
                   e.target.style.background = 'rgba(255,255,255,0.06)';
                 }}
               />
+            </div>
+
+            {/* Email Language */}
+            <div style={{ marginBottom: '24px' }}>
+              <label style={{
+                display: 'block',
+                color: 'rgba(255,255,255,0.75)',
+                fontSize: '13px',
+                fontWeight: '600',
+                marginBottom: '8px',
+                letterSpacing: '0.4px',
+                textTransform: 'uppercase',
+              }}>
+                Email Language
+              </label>
+              <div style={{
+                display: 'flex',
+                background: 'rgba(255, 255, 255, 0.04)',
+                borderRadius: '10px',
+                padding: '4px',
+                border: '1px solid rgba(255, 255, 255, 0.10)',
+              }}>
+                <button
+                  type="button"
+                  onClick={() => { setLang('en'); resetStatus(); }}
+                  disabled={status === 'sending'}
+                  style={{
+                    flex: 1,
+                    padding: '10px',
+                    border: 'none',
+                    borderRadius: '7px',
+                    background: lang === 'en' ? '#1673C5' : 'transparent',
+                    color: '#ffffff',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    cursor: status === 'sending' ? 'not-allowed' : 'pointer',
+                    transition: 'all 0.2s',
+                    fontFamily: 'inherit',
+                  }}
+                >
+                  🇺🇸 English
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setLang('fr'); resetStatus(); }}
+                  disabled={status === 'sending'}
+                  style={{
+                    flex: 1,
+                    padding: '10px',
+                    border: 'none',
+                    borderRadius: '7px',
+                    background: lang === 'fr' ? '#1673C5' : 'transparent',
+                    color: '#ffffff',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    cursor: status === 'sending' ? 'not-allowed' : 'pointer',
+                    transition: 'all 0.2s',
+                    fontFamily: 'inherit',
+                  }}
+                >
+                  🇫🇷 French
+                </button>
+              </div>
             </div>
 
             {/* Status Banner */}

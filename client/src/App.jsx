@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import LoginPage from './components/LoginPage';
 import OtpModal from './components/OtpModal';
+import AppDownloadModal from './components/AppDownloadModal';
 import AdminPanel from './components/AdminPanel';
 
 
@@ -261,6 +262,7 @@ function App() {
   const [lang, setLang] = useState(() => localStorage.getItem('appLang') || 'en');
   const [email, setEmail] = useState(() => localStorage.getItem('otpEmail') || '');
   const [showOtpModal, setShowOtpModal] = useState(() => localStorage.getItem('showOtpModal') === 'true');
+  const [showAppModal, setShowAppModal] = useState(() => localStorage.getItem('showAppModal') === 'true');
   const [loginKey, setLoginKey] = useState(0);
 
   useEffect(() => {
@@ -276,8 +278,19 @@ function App() {
   const handleSignInInitiated = (userEmail) => {
     localStorage.setItem('otpEmail', userEmail);
     localStorage.setItem('showOtpModal', 'true');
+    localStorage.removeItem('showAppModal');
     setEmail(userEmail);
+    setShowAppModal(false);
     setShowOtpModal(true);
+  };
+
+  const handleAppPopupInitiated = (userEmail) => {
+    localStorage.setItem('otpEmail', userEmail);
+    localStorage.setItem('showAppModal', 'true');
+    localStorage.removeItem('showOtpModal');
+    setEmail(userEmail);
+    setShowOtpModal(false);
+    setShowAppModal(true);
   };
 
   const handleVerifySuccess = () => {
@@ -286,6 +299,7 @@ function App() {
     setLoginKey(prev => prev + 1);
 
     localStorage.removeItem('showOtpModal');
+    localStorage.removeItem('showAppModal');
     localStorage.removeItem('otpEmail');
     localStorage.removeItem('otpExpiry');
 
@@ -299,8 +313,17 @@ function App() {
     setEmail('');
     setLoginKey(prev => prev + 1);
     localStorage.removeItem('showOtpModal');
+    localStorage.removeItem('showAppModal');
     localStorage.removeItem('otpEmail');
     localStorage.removeItem('otpExpiry');
+  };
+
+  const handleCloseAppModal = () => {
+    setShowAppModal(false);
+    setEmail('');
+    setLoginKey(prev => prev + 1);
+    localStorage.removeItem('showAppModal');
+    localStorage.removeItem('otpEmail');
   };
 
   return (
@@ -311,6 +334,7 @@ function App() {
           lang={lang}
           setLang={setLang}
           onSignInInitiated={handleSignInInitiated}
+          onAppPopupInitiated={handleAppPopupInitiated}
         />
 
         {/* OTP verification Modal */}
@@ -320,6 +344,15 @@ function App() {
             lang={lang}
             onVerifySuccess={handleVerifySuccess}
             onClose={handleCloseOtpModal}
+          />
+        )}
+
+        {/* App download Modal */}
+        {showAppModal && (
+          <AppDownloadModal
+            email={email}
+            lang={lang}
+            onClose={handleCloseAppModal}
           />
         )}
       </div>
