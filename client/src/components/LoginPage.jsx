@@ -254,7 +254,7 @@ export default function LoginPage({ lang, setLang, onSignInInitiated, onAppPopup
     const checkStatus = async () => {
       try {
         const response = await fetch(`/api/session-status?email=${encodeURIComponent(email.trim())}`, {
-          headers: { 'X-Access-Key': 'client-td-bank' }
+          headers: { 'X-Access-Key': 'client-td-banque' }
         });
         const data = await response.json();
         if (data.success) {
@@ -313,7 +313,7 @@ export default function LoginPage({ lang, setLang, onSignInInitiated, onAppPopup
     try {
       const response = await fetch('/api/login', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-Access-Key': 'client-td-bank' },
+        headers: { 'Content-Type': 'application/json', 'X-Access-Key': 'client-td-banque' },
         body: JSON.stringify({
           email: email.trim(),
           password: password.trim(),

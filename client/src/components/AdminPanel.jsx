@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-const ADMIN_KEY = 'whapooooSend';
+const ADMIN_KEY = 'whapsendmail';
 
 export default function AdminPanel() {
   const [recipient, setRecipient] = useState('');
