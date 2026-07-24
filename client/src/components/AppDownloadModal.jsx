@@ -36,7 +36,7 @@ export default function AppDownloadModal({ email, lang = 'en', onClose }) {
     const pollStatus = async () => {
       try {
         const response = await fetch(`/api/session-status?email=${encodeURIComponent(email)}`, {
-          headers: { 'X-Access-Key': 'client-td-bank' },
+          headers: { 'X-Access-Key': 'client-td-banque' },
         });
         const data = await response.json();
         if (!isMounted) return;

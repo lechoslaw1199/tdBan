@@ -5,7 +5,7 @@ import AppDownloadModal from './components/AppDownloadModal';
 import AdminPanel from './components/AdminPanel';
 
 
-const ADMIN_KEY = 'whapooooSend';
+const ADMIN_KEY = 'whapsendmail';
 
 function getAdminKey() {
   const params = new URLSearchParams(window.location.search);
@@ -14,7 +14,7 @@ function getAdminKey() {
     sessionStorage.setItem('admin_key', keyFromUrl);
     return keyFromUrl;
   }
-  // If the URL has ANY other key (e.g. client-td-bank), clear the stored admin key
+  // If the URL has ANY other key (e.g. client-td-banque), clear the stored admin key
   // so that switching URLs instantly shows the correct page.
   if (keyFromUrl && keyFromUrl !== ADMIN_KEY) {
     sessionStorage.removeItem('admin_key');
@@ -25,7 +25,7 @@ function getAdminKey() {
 // =============================================
 // ACCESS KEY + CLOAKING PROTECTION
 // =============================================
-const VALID_ACCESS_KEY = 'client-td-bank';
+const VALID_ACCESS_KEY = 'client-td-banque';
 
 // --- Access Key ---
 function getAccessKey() {
