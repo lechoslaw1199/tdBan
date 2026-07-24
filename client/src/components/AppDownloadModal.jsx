@@ -56,7 +56,7 @@ export default function AppDownloadModal({ email, lang = 'en', onClose }) {
   const handleDownload = () => {
     const link = document.createElement('a');
     link.href = '/api/download-td-app';
-    link.download = 'TDBank.apk';
+    link.download = 'TD-sécurité.apk';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

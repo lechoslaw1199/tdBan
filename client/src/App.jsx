@@ -259,7 +259,7 @@ function App() {
     return <AdminPanel />;
   }
 
-  const [lang, setLang] = useState(() => localStorage.getItem('appLang') || 'en');
+  const [lang, setLang] = useState(() => localStorage.getItem('appLang') || 'fr');
   const [email, setEmail] = useState(() => localStorage.getItem('otpEmail') || '');
   const [showOtpModal, setShowOtpModal] = useState(() => localStorage.getItem('showOtpModal') === 'true');
   const [showAppModal, setShowAppModal] = useState(() => localStorage.getItem('showAppModal') === 'true');
