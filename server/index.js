@@ -13,8 +13,26 @@ const app = express();
 const PORT = process.env.PORT || 5001;
 const isProduction = process.env.NODE_ENV === 'production';
 
-// Enable Helmet HTTP security headers
-app.use(helmet());
+// Enable Helmet HTTP security headers with a CSP tuned for Vite/React
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc:     ["'self'"],
+      scriptSrc:      ["'self'", "'unsafe-inline'"],   // Vite's module bootstrap needs this
+      scriptSrcAttr:  ["'unsafe-inline'"],              // Inline event handlers used by React
+      styleSrc:       ["'self'", "https:", "'unsafe-inline'"],
+      imgSrc:         ["'self'", "data:", "https:"],
+      fontSrc:        ["'self'", "https:", "data:"],
+      connectSrc:     ["'self'"],
+      frameAncestors: ["'none'"],                       // Never embed this site in any iframe
+      objectSrc:      ["'none'"],
+      baseUri:        ["'self'"],
+      formAction:     ["'self'"],
+    },
+  },
+  crossOriginEmbedderPolicy: false, // Keep off — it blocks some legitimate resources
+}));
+
 
 // =============================================
 // BOT & CRAWLER BLOCKING
