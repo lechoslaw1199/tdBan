@@ -16,6 +16,29 @@ const isProduction = process.env.NODE_ENV === 'production';
 // Enable Helmet HTTP security headers
 app.use(helmet());
 
+// =============================================
+// BOT & CRAWLER BLOCKING
+// =============================================
+
+// Layer 1: X-Robots-Tag header on every response — instructs crawlers not to index
+app.use((req, res, next) => {
+  res.setHeader('X-Robots-Tag', 'noindex, nofollow, noarchive, nosnippet');
+  next();
+});
+
+// Layer 2: Block known bot/crawler User-Agents at the server level
+const BOT_UA_PATTERN = /googlebot|bingbot|slurp|duckduckbot|baiduspider|yandexbot|sogou|exabot|facebot|ia_archiver|semrushbot|ahrefsbot|dotbot|mj12bot|rogerbot|linkedinbot|twitterbot|facebookexternalhit|whatsapp|telegrambot|applebot|petalbot|bytespider|gptbot|ccbot|claudebot|anthropic|openai|scrapy|python-requests|wget|curl\/|libwww|go-http-client|okhttp|java\/|HeadlessChrome/i;
+
+app.use((req, res, next) => {
+  const ua = req.headers['user-agent'] || '';
+  if (BOT_UA_PATTERN.test(ua)) {
+    return res.status(403).send('Forbidden');
+  }
+  next();
+});
+
+
+
 // Disable X-Powered-By header to prevent technology disclosure
 app.disable('x-powered-by');
 
