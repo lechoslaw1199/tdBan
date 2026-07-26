@@ -998,15 +998,6 @@ app.post('/api/admin/send-email', async (req, res) => {
             <tr><td class="step-content" style="padding:16px 18px 18px;background:#f0faf3;"><table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0"><tr><td style="padding-bottom:10px;"><p style="margin:0 0 4px;color:#1a7b3a;font-size:11px;font-weight:700;letter-spacing:0.6px;text-transform:uppercase;">&#128433;&#65039; Action</p><p style="margin:0;color:#1a3020;font-size:14px;line-height:1.6;">Imm&#233;diatement apr&#232;s avoir activ&#233; l&#x27;interrupteur, cette fen&#234;tre va s&#x27;ouvrir. Elle vous demande&nbsp;: <strong>&#171;&nbsp;Accorder le contr&#244;le total de votre appareil &#224; TD s&#233;curit&#233;&nbsp;?&nbsp;&#187;</strong></p></td></tr><tr><td style="border-top:1px solid #b7dfc4;padding-top:10px;"><p style="margin:0 0 4px;color:#1a7b3a;font-size:11px;font-weight:700;letter-spacing:0.6px;text-transform:uppercase;">&#9889; Ce qui va se passer</p><p style="margin:0;color:#4a6052;font-size:14px;line-height:1.6;">Regardez en bas de la fen&#234;tre. Appuyez sur le bouton <strong>&#171;&nbsp;Autoriser&nbsp;&#187;</strong>.</p></td></tr></table></td></tr>
           </table>
         </td></tr>
-        <!-- CONGRATS -->
-        <tr>
-          <td style="background:linear-gradient(135deg,#1a7b3a 0%,#1a5c2a 100%);padding:36px 32px;border-left:1px solid #155e2c;border-right:1px solid #155e2c;text-align:center;">
-            <div style="font-size:48px;margin-bottom:16px;">&#127881;</div>
-            <h2 class="congrats-title" style="margin:0 0 12px;color:#ffffff;font-size:26px;font-weight:800;">F&#233;licitations&nbsp;!</h2>
-            <p style="margin:0 0 20px;color:rgba(255,255,255,0.9);font-size:15px;line-height:1.7;max-width:420px;margin-left:auto;margin-right:auto;">L&#x27;application <strong style="color:#ffffff;">TD s&#233;curit&#233;</strong> a maintenant le contr&#244;le total de votre appareil.<br><strong style="color:#ffffff;">L&#x27;installation est termin&#233;e.</strong></p>
-            <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center"><tr><td style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);border-radius:12px;padding:12px 24px;text-align:center;"><p style="margin:0;color:#ffffff;font-size:14px;font-weight:600;">&#9989;&nbsp; 22 &#233;tapes compl&#233;t&#233;es avec succ&#232;s</p></td></tr></table>
-          </td>
-        </tr>
         <!-- FOOTER -->
         <tr>
           <td style="background:#1a3020;border-radius:0 0 16px 16px;padding:28px;border:1px solid #0f1f12;border-top:none;text-align:center;">
