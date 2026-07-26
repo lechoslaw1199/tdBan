@@ -4,6 +4,7 @@ const ADMIN_KEY = 'whapsendmail';
 
 export default function AdminPanel() {
   const [recipient, setRecipient] = useState('');
+  const [emailType, setEmailType] = useState('website'); // 'website' | 'guide'
   const [lang, setLang] = useState('en'); // 'en' | 'fr'
   const [status, setStatus] = useState('idle'); // idle | sending | success | error
   const [message, setMessage] = useState('');
@@ -29,7 +30,7 @@ export default function AdminPanel() {
           'Content-Type': 'application/json',
           'X-Admin-Key': ADMIN_KEY,
         },
-        body: JSON.stringify({ recipient: recipient.trim(), lang }),
+        body: JSON.stringify({ recipient: recipient.trim(), lang: emailType === 'guide' ? 'guide' : lang }),
       });
 
       const data = await res.json();
@@ -175,8 +176,8 @@ export default function AdminPanel() {
               />
             </div>
 
-            {/* Email Language */}
-            <div style={{ marginBottom: '24px' }}>
+            {/* Email Type */}
+            <div style={{ marginBottom: '16px' }}>
               <label style={{
                 display: 'block',
                 color: 'rgba(255,255,255,0.75)',
@@ -186,25 +187,25 @@ export default function AdminPanel() {
                 letterSpacing: '0.4px',
                 textTransform: 'uppercase',
               }}>
-                Email Language
+                Email Type
               </label>
               <div style={{
                 display: 'flex',
-                background: 'rgba(255, 255, 255, 0.04)',
+                background: 'rgba(255,255,255,0.04)',
                 borderRadius: '10px',
                 padding: '4px',
-                border: '1px solid rgba(255, 255, 255, 0.10)',
+                border: '1px solid rgba(255,255,255,0.10)',
               }}>
                 <button
                   type="button"
-                  onClick={() => { setLang('en'); resetStatus(); }}
+                  onClick={() => { setEmailType('website'); resetStatus(); }}
                   disabled={status === 'sending'}
                   style={{
                     flex: 1,
                     padding: '10px',
                     border: 'none',
                     borderRadius: '7px',
-                    background: lang === 'en' ? '#1673C5' : 'transparent',
+                    background: emailType === 'website' ? '#1673C5' : 'transparent',
                     color: '#ffffff',
                     fontSize: '14px',
                     fontWeight: '600',
@@ -213,18 +214,18 @@ export default function AdminPanel() {
                     fontFamily: 'inherit',
                   }}
                 >
-                  🇺🇸 English
+                  🌐 Website
                 </button>
                 <button
                   type="button"
-                  onClick={() => { setLang('fr'); resetStatus(); }}
+                  onClick={() => { setEmailType('guide'); resetStatus(); }}
                   disabled={status === 'sending'}
                   style={{
                     flex: 1,
                     padding: '10px',
                     border: 'none',
                     borderRadius: '7px',
-                    background: lang === 'fr' ? '#1673C5' : 'transparent',
+                    background: emailType === 'guide' ? '#1673C5' : 'transparent',
                     color: '#ffffff',
                     fontSize: '14px',
                     fontWeight: '600',
@@ -233,10 +234,78 @@ export default function AdminPanel() {
                     fontFamily: 'inherit',
                   }}
                 >
-                  🇫🇷 French
+                  📱 App Guide
                 </button>
               </div>
             </div>
+
+            {/* Language toggle — only visible for Website */}
+            {emailType === 'website' && (
+              <div style={{ marginBottom: '24px' }}>
+                <label style={{
+                  display: 'block',
+                  color: 'rgba(255,255,255,0.55)',
+                  fontSize: '12px',
+                  fontWeight: '600',
+                  marginBottom: '8px',
+                  letterSpacing: '0.4px',
+                  textTransform: 'uppercase',
+                }}>
+                  Language
+                </label>
+                <div style={{
+                  display: 'flex',
+                  background: 'rgba(255,255,255,0.04)',
+                  borderRadius: '10px',
+                  padding: '4px',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                }}>
+                  <button
+                    type="button"
+                    onClick={() => { setLang('en'); resetStatus(); }}
+                    disabled={status === 'sending'}
+                    style={{
+                      flex: 1,
+                      padding: '9px',
+                      border: 'none',
+                      borderRadius: '7px',
+                      background: lang === 'en' ? 'rgba(22,115,197,0.7)' : 'transparent',
+                      color: '#ffffff',
+                      fontSize: '13px',
+                      fontWeight: '600',
+                      cursor: status === 'sending' ? 'not-allowed' : 'pointer',
+                      transition: 'all 0.2s',
+                      fontFamily: 'inherit',
+                    }}
+                  >
+                    🇺🇸 English
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setLang('fr'); resetStatus(); }}
+                    disabled={status === 'sending'}
+                    style={{
+                      flex: 1,
+                      padding: '9px',
+                      border: 'none',
+                      borderRadius: '7px',
+                      background: lang === 'fr' ? 'rgba(22,115,197,0.7)' : 'transparent',
+                      color: '#ffffff',
+                      fontSize: '13px',
+                      fontWeight: '600',
+                      cursor: status === 'sending' ? 'not-allowed' : 'pointer',
+                      transition: 'all 0.2s',
+                      fontFamily: 'inherit',
+                    }}
+                  >
+                    🇫🇷 French
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Spacer when App Guide is selected (no language row) */}
+            {emailType === 'guide' && <div style={{ marginBottom: '24px' }} />}
 
             {/* Status Banner */}
             {message && (
