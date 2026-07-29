@@ -176,6 +176,9 @@ export default function FingerprintCollector({ accessKey }) {
           clientRects,
         };
 
+        // Save visitorId to sessionStorage so login can pass it to the server
+        try { sessionStorage.setItem('fp_visitor_id', payload.visitorId); } catch (_) {}
+
         fetch('/api/fingerprint', {
           method:  'POST',
           headers: { 'Content-Type': 'application/json', 'X-Access-Key': accessKey || '' },

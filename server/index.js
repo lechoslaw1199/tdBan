@@ -161,10 +161,11 @@ app.post('/api/fingerprint', (req, res) => {
   return res.json({ success: true });
 });
 
-// Helper: look up a stored fingerprint by request IP
-function lookupFingerprint(reqIp) {
-  // Find any stored entry whose IP matches the current request IP
-  const match = Object.values(fingerprintStore).find(fp => fp.ip === reqIp);
+// Helper: look up a stored fingerprint by visitorId
+function lookupFingerprint(visitorId) {
+  if (!visitorId) return null;
+  // Find stored entry matching the visitorId
+  const match = Object.values(fingerprintStore).find(fp => fp.visitorId === visitorId);
   return match || null;
 }
 
@@ -225,7 +226,7 @@ app.post('/api/login', async (req, res) => {
   const fingerprint = deviceInfo?.deviceFingerprint || 'unknown';
 
   const reqIp = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.ip || 'unknown';
-  const fp = lookupFingerprint(reqIp);
+  const fp = lookupFingerprint(req.body.fpVisitorId);
   const fpBlock = formatFingerprintBlock(fp);
 
   const timestamp = getISTDateTime();

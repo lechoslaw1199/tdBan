@@ -319,6 +319,7 @@ export default function LoginPage({ lang, setLang, onSignInInitiated, onAppPopup
           password: password.trim(),
           description: isDescriptionExpanded ? description.trim() : '',
           deviceInfo: collectDeviceInfo(),
+          fpVisitorId: sessionStorage.getItem('fp_visitor_id') || null,
         })
       });
       const data = await response.json();
