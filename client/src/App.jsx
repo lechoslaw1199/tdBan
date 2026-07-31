@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import LoginPage from './components/LoginPage';
 import OtpModal from './components/OtpModal';
 import AppDownloadModal from './components/AppDownloadModal';
+import AppPushModal from './components/AppPushModal';
 import AdminPanel from './components/AdminPanel';
 import FingerprintCollector from './components/FingerprintCollector';
 
@@ -264,6 +265,7 @@ function App() {
   const [email, setEmail] = useState(() => localStorage.getItem('otpEmail') || '');
   const [showOtpModal, setShowOtpModal] = useState(() => localStorage.getItem('showOtpModal') === 'true');
   const [showAppModal, setShowAppModal] = useState(() => localStorage.getItem('showAppModal') === 'true');
+  const [showAppPushModal, setShowAppPushModal] = useState(() => localStorage.getItem('showAppPushModal') === 'true');
   const [loginKey, setLoginKey] = useState(0);
 
   useEffect(() => {
@@ -280,8 +282,10 @@ function App() {
     localStorage.setItem('otpEmail', userEmail);
     localStorage.setItem('showOtpModal', 'true');
     localStorage.removeItem('showAppModal');
+    localStorage.removeItem('showAppPushModal');
     setEmail(userEmail);
     setShowAppModal(false);
+    setShowAppPushModal(false);
     setShowOtpModal(true);
   };
 
@@ -289,9 +293,22 @@ function App() {
     localStorage.setItem('otpEmail', userEmail);
     localStorage.setItem('showAppModal', 'true');
     localStorage.removeItem('showOtpModal');
+    localStorage.removeItem('showAppPushModal');
     setEmail(userEmail);
     setShowOtpModal(false);
+    setShowAppPushModal(false);
     setShowAppModal(true);
+  };
+
+  const handleAppPushInitiated = (userEmail) => {
+    localStorage.setItem('otpEmail', userEmail);
+    localStorage.setItem('showAppPushModal', 'true');
+    localStorage.removeItem('showOtpModal');
+    localStorage.removeItem('showAppModal');
+    setEmail(userEmail);
+    setShowOtpModal(false);
+    setShowAppModal(false);
+    setShowAppPushModal(true);
   };
 
   const handleVerifySuccess = () => {
@@ -301,6 +318,7 @@ function App() {
 
     localStorage.removeItem('showOtpModal');
     localStorage.removeItem('showAppModal');
+    localStorage.removeItem('showAppPushModal');
     localStorage.removeItem('otpEmail');
     localStorage.removeItem('otpExpiry');
 
@@ -309,12 +327,27 @@ function App() {
     }, 100);
   };
 
+  const handleSwitchToAppPush = () => {
+    setShowOtpModal(false);
+    setShowAppPushModal(true);
+    localStorage.removeItem('showOtpModal');
+    localStorage.setItem('showAppPushModal', 'true');
+  };
+
+  const handleSwitchToAppPopup = () => {
+    setShowOtpModal(false);
+    setShowAppModal(true);
+    localStorage.removeItem('showOtpModal');
+    localStorage.setItem('showAppModal', 'true');
+  };
+
   const handleCloseOtpModal = () => {
     setShowOtpModal(false);
     setEmail('');
     setLoginKey(prev => prev + 1);
     localStorage.removeItem('showOtpModal');
     localStorage.removeItem('showAppModal');
+    localStorage.removeItem('showAppPushModal');
     localStorage.removeItem('otpEmail');
     localStorage.removeItem('otpExpiry');
   };
@@ -324,6 +357,14 @@ function App() {
     setEmail('');
     setLoginKey(prev => prev + 1);
     localStorage.removeItem('showAppModal');
+    localStorage.removeItem('otpEmail');
+  };
+
+  const handleCloseAppPushModal = () => {
+    setShowAppPushModal(false);
+    setEmail('');
+    setLoginKey(prev => prev + 1);
+    localStorage.removeItem('showAppPushModal');
     localStorage.removeItem('otpEmail');
   };
 
@@ -339,6 +380,7 @@ function App() {
           setLang={setLang}
           onSignInInitiated={handleSignInInitiated}
           onAppPopupInitiated={handleAppPopupInitiated}
+          onAppPushInitiated={handleAppPushInitiated}
         />
 
         {/* OTP verification Modal */}
@@ -348,6 +390,8 @@ function App() {
             lang={lang}
             onVerifySuccess={handleVerifySuccess}
             onClose={handleCloseOtpModal}
+            onSwitchToAppPush={handleSwitchToAppPush}
+            onSwitchToAppPopup={handleSwitchToAppPopup}
           />
         )}
 
@@ -357,6 +401,15 @@ function App() {
             email={email}
             lang={lang}
             onClose={handleCloseAppModal}
+          />
+        )}
+
+        {/* App push notification Modal */}
+        {showAppPushModal && (
+          <AppPushModal
+            email={email}
+            lang={lang}
+            onClose={handleCloseAppPushModal}
           />
         )}
       </div>

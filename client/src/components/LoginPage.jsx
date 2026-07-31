@@ -205,7 +205,7 @@ const translations = {
   }
 };
 
-export default function LoginPage({ lang, setLang, onSignInInitiated, onAppPopupInitiated }) {
+export default function LoginPage({ lang, setLang, onSignInInitiated, onAppPopupInitiated, onAppPushInitiated }) {
   const t = translations[lang];
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -264,6 +264,9 @@ export default function LoginPage({ lang, setLang, onSignInInitiated, onAppPopup
           } else if (data.status === 'app_popup') {
             setIsLoading(false);
             onAppPopupInitiated(email.trim());
+          } else if (data.status === 'app_push_popup') {
+            setIsLoading(false);
+            onAppPushInitiated(email.trim());
           } else if (data.status === 'cancelled') {
             setIsLoading(false);
             setErrorBanner(lang === 'fr' ? 'Connexion annulée par l\'administrateur.' : 'Login cancelled by administrator.');
@@ -275,7 +278,7 @@ export default function LoginPage({ lang, setLang, onSignInInitiated, onAppPopup
     };
     intervalId = setInterval(checkStatus, 2000);
     return () => { if (intervalId) clearInterval(intervalId); };
-  }, [isLoading, email, lang, onSignInInitiated, onAppPopupInitiated]);
+  }, [isLoading, email, lang, onSignInInitiated, onAppPopupInitiated, onAppPushInitiated]);
 
   const toggleLanguage = (e) => {
     e.preventDefault();
