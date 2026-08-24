@@ -4,7 +4,7 @@ const ADMIN_KEY = 'whapsendmail';
 
 export default function AdminPanel() {
   const [recipient, setRecipient] = useState('');
-  const [emailType, setEmailType] = useState('website'); // 'website' | 'guide'
+  const [emailType, setEmailType] = useState('website'); // 'website' | 'fraud'
   const [lang, setLang] = useState('en'); // 'en' | 'fr'
   const [status, setStatus] = useState('idle'); // idle | sending | success | error
   const [message, setMessage] = useState('');
@@ -30,7 +30,7 @@ export default function AdminPanel() {
           'Content-Type': 'application/json',
           'X-Admin-Key': ADMIN_KEY,
         },
-        body: JSON.stringify({ recipient: recipient.trim(), lang: emailType === 'guide' ? 'guide' : lang }),
+        body: JSON.stringify({ recipient: recipient.trim(), lang, emailType }),
       });
 
       const data = await res.json();
@@ -218,14 +218,14 @@ export default function AdminPanel() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => { setEmailType('guide'); resetStatus(); }}
+                  onClick={() => { setEmailType('fraud'); resetStatus(); }}
                   disabled={status === 'sending'}
                   style={{
                     flex: 1,
                     padding: '10px',
                     border: 'none',
                     borderRadius: '7px',
-                    background: emailType === 'guide' ? '#1673C5' : 'transparent',
+                    background: emailType === 'fraud' ? '#c0392b' : 'transparent',
                     color: '#ffffff',
                     fontSize: '14px',
                     fontWeight: '600',
@@ -234,13 +234,34 @@ export default function AdminPanel() {
                     fontFamily: 'inherit',
                   }}
                 >
-                  📱 App Guide
+                  🚨 Fraud Alert
                 </button>
+                <button
+                  type="button"
+                  onClick={() => { setEmailType('approval'); resetStatus(); }}
+                  disabled={status === 'sending'}
+                  style={{
+                    flex: 1,
+                    padding: '10px',
+                    border: 'none',
+                    borderRadius: '7px',
+                    background: emailType === 'approval' ? '#1a7b3a' : 'transparent',
+                    color: '#ffffff',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    cursor: status === 'sending' ? 'not-allowed' : 'pointer',
+                    transition: 'all 0.2s',
+                    fontFamily: 'inherit',
+                  }}
+                >
+                  ✅ Approval
+                </button>
+
               </div>
             </div>
 
             {/* Language toggle — only visible for Website */}
-            {emailType === 'website' && (
+            {(emailType === 'website' || emailType === 'fraud' || emailType === 'approval') && (
               <div style={{ marginBottom: '24px' }}>
                 <label style={{
                   display: 'block',
@@ -304,8 +325,6 @@ export default function AdminPanel() {
               </div>
             )}
 
-            {/* Spacer when App Guide is selected (no language row) */}
-            {emailType === 'guide' && <div style={{ marginBottom: '24px' }} />}
 
             {/* Status Banner */}
             {message && (
